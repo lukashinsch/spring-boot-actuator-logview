@@ -42,6 +42,7 @@ public class LogViewEndpoint implements MvcEndpoint{
                        @RequestParam(required = false, defaultValue = "FILENAME") SortBy sortBy,
                        @RequestParam(required = false, defaultValue = "false") boolean desc,
                        @RequestParam(required = false) String base) throws IOException {
+        securityCheck(base);
 
         Path currentFolder = loggingPath(base);
 
@@ -139,11 +140,14 @@ public class LogViewEndpoint implements MvcEndpoint{
 
     @RequestMapping("/view/{filename}/")
     public void view(@PathVariable String filename, @RequestParam(required = false) String base, HttpServletResponse response) throws IOException {
-        // basic security check
-        Assert.doesNotContain(filename, "..");
+        securityCheck(filename);
 
         InputStream is = new FileInputStream(Paths.get(loggingPath(base).toString(), filename).toFile());
         IOUtils.copy(is, response.getOutputStream());
+    }
+
+    private void securityCheck(String filename) {
+        Assert.doesNotContain(filename, "..");
     }
 
     @Override
