@@ -157,11 +157,6 @@ public class LogViewEndpoint implements MvcEndpoint{
             this.size = size;
         }
 
-        @Override
-        public String toString() {
-            return filename + ":" + size + ":" + modified.toString();
-        }
-
         public String getModifiedPretty() {
             return modifiedPretty;
         }
@@ -170,6 +165,7 @@ public class LogViewEndpoint implements MvcEndpoint{
             this.modifiedPretty = modifiedPretty;
         }
     }
+
     public enum SortBy {
         FILENAME, SIZE, MODIFIED
     }
