@@ -1,7 +1,5 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
-import eu.hinsch.spring.boot.actuator.logview.LogViewEndpoint.FileEntry;
-import eu.hinsch.spring.boot.actuator.logview.LogViewEndpoint.SortBy;
 import org.apache.catalina.ssi.ByteArrayServletOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -60,7 +58,7 @@ public class LogViewEndpointTest {
     @Test
     public void shouldReturnEmptyFileListForEmptyDirectory() throws IOException {
         // when
-        logViewEndpoint.list(model, SortBy.FILENAME, false);
+        logViewEndpoint.list(model, SortBy.FILENAME, false, null);
 
         // then
         assertThat(model.containsAttribute("files"), is(true));
@@ -75,7 +73,7 @@ public class LogViewEndpointTest {
         createFile("C.log", "x", now);
 
         // when
-        logViewEndpoint.list(model, SortBy.FILENAME, false);
+        logViewEndpoint.list(model, SortBy.FILENAME, false, null);
 
         // then
         assertThat(getFileNames(), contains("A.log", "B.log", "C.log"));
@@ -89,7 +87,7 @@ public class LogViewEndpointTest {
         createFile("C.log", "x", now);
 
         // when
-        logViewEndpoint.list(model, SortBy.FILENAME, true);
+        logViewEndpoint.list(model, SortBy.FILENAME, true, null);
 
         // then
         assertThat(getFileNames(), contains("C.log", "B.log", "A.log"));
@@ -103,7 +101,7 @@ public class LogViewEndpointTest {
         createFile("C.log", "xxx", now);
 
         // when
-        logViewEndpoint.list(model, SortBy.SIZE, false);
+        logViewEndpoint.list(model, SortBy.SIZE, false, null);
 
         // then
         assertThat(getFileNames(), contains("B.log", "A.log", "C.log"));
@@ -119,7 +117,7 @@ public class LogViewEndpointTest {
         createFile("C.log", "x", now - 5 * 60 * 1000);
 
         // when
-        logViewEndpoint.list(model, SortBy.MODIFIED, false);
+        logViewEndpoint.list(model, SortBy.MODIFIED, false, null);
 
         // then
         assertThat(getFileNames(), contains("B.log", "C.log", "A.log"));
@@ -143,7 +141,7 @@ public class LogViewEndpointTest {
         expectedException.expectMessage(containsString("this String argument must not contain the substring [..]"));
 
         // when
-        logViewEndpoint.view("../somefile", null);
+        logViewEndpoint.view("../somefile", null, null);
     }
 
     @Test
@@ -154,7 +152,7 @@ public class LogViewEndpointTest {
         when(response.getOutputStream()).thenReturn(outputStream);
 
         // when
-        logViewEndpoint.view("file.log", response);
+        logViewEndpoint.view("file.log", null, response);
 
         // then
         assertThat(new String(outputStream.toByteArray()), is("abc"));
@@ -163,21 +161,21 @@ public class LogViewEndpointTest {
     private List<String> getFileNames() {
         return getFileEntries()
                 .stream()
-                .map(entry -> entry.getFilename())
+                .map(FileEntry::getFilename)
                 .collect(toList());
     }
 
     private List<Long> getFileSizes() {
         return getFileEntries()
                 .stream()
-                .map(entry -> entry.getSize())
+                .map(FileEntry::getSize)
                 .collect(toList());
     }
 
     private List<String> getFilePrettyTimes() {
         return getFileEntries()
                 .stream()
-                .map(entry -> entry.getModifiedPretty())
+                .map(FileEntry::getModifiedPretty)
                 .collect(toList());
     }
 

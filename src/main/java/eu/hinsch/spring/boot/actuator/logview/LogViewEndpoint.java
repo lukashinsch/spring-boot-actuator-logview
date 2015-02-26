@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
 import java.util.*;
 
 import static java.util.stream.Collectors.toList;
@@ -41,30 +40,48 @@ public class LogViewEndpoint implements MvcEndpoint{
     @RequestMapping("/")
     public String list(Model model,
                        @RequestParam(required = false, defaultValue = "FILENAME") SortBy sortBy,
-                       @RequestParam(required = false, defaultValue = "false") boolean desc) throws IOException {
+                       @RequestParam(required = false, defaultValue = "false") boolean desc,
+                       @RequestParam(required = false) String base) throws IOException {
 
-        Path loggingPath = loggingPath();
+        Path currentFolder = loggingPath(base);
 
-        final List<FileEntry> files = getFileEntries(loggingPath);
+        final List<FileEntry> files = getFileEntries(currentFolder);
 
         List<FileEntry> sortedFiles = sortFiles(files, sortBy, desc);
 
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("desc", desc);
         model.addAttribute("files", sortedFiles);
-        model.addAttribute("loggingPath", loggingPath.toAbsolutePath().toString());
+        model.addAttribute("currentFolder", currentFolder.toAbsolutePath().toString());
+        model.addAttribute("base", base != null ? base : "");
+
+        String parent = getParent(currentFolder);
+        model.addAttribute("parent", parent);
 
         return "logview";
     }
 
-    private Path loggingPath() {
+    private String getParent(Path loggingPath) {
+        Path basePath = loggingPath(null);
+        String parent = "";
+        if (!basePath.toString().equals(loggingPath.toString())) {
+            parent = loggingPath.getParent().toString();
+            if (parent.startsWith(basePath.toString())) {
+                parent = parent.substring(basePath.toString().length());
+            }
+        }
+        return parent;
+    }
+
+    private Path loggingPath(String base) {
         String loggingPath = environment.getProperty("logging.path");
-        return Paths.get(loggingPath);
+        return base != null ? Paths.get(loggingPath, base) : Paths.get(loggingPath);
     }
 
     private List<FileEntry> getFileEntries(Path loggingPath) throws IOException {
         final List<FileEntry> files = new ArrayList<>();
-        Files.newDirectoryStream(loggingPath).forEach((path) -> files.add(createFileEntry(path)));
+        Files.newDirectoryStream(loggingPath)
+                .forEach((path) -> files.add(createFileEntry(path)));
         return files;
     }
 
@@ -78,7 +95,25 @@ public class LogViewEndpoint implements MvcEndpoint{
             throw new RuntimeException("unable to retrieve file attribute", e);
         }
         fileEntry.setModifiedPretty(prettyTime.format(new Date(fileEntry.getModified().toMillis())));
+
+        FileType fileType = null;
+        if (path.toFile().isDirectory()) {
+            fileType = FileType.DIRECTORY;
+        }
+        else if (isArchive(path)) {
+            fileType = FileType.ARCHIVE;
+        }
+        else {
+            fileType = FileType.FILE;
+        }
+        fileEntry.setFileType(fileType);
+
         return fileEntry;
+    }
+
+    private boolean isArchive(Path path) {
+        String name = path.getFileName().toString();
+        return name.endsWith(".zip") || name.endsWith(".tar.gz");
     }
 
     private List<FileEntry> sortFiles(List<FileEntry> files, SortBy sortBy, boolean desc) {
@@ -103,11 +138,11 @@ public class LogViewEndpoint implements MvcEndpoint{
     }
 
     @RequestMapping("/view/{filename}/")
-    public void view(@PathVariable String filename, HttpServletResponse response) throws IOException {
+    public void view(@PathVariable String filename, @RequestParam(required = false) String base, HttpServletResponse response) throws IOException {
         // basic security check
         Assert.doesNotContain(filename, "..");
 
-        InputStream is = new FileInputStream(Paths.get(loggingPath().toString(), filename).toFile());
+        InputStream is = new FileInputStream(Paths.get(loggingPath(base).toString(), filename).toFile());
         IOUtils.copy(is, response.getOutputStream());
     }
 
@@ -127,46 +162,4 @@ public class LogViewEndpoint implements MvcEndpoint{
         return null;
     }
 
-    public static class FileEntry {
-        private String filename;
-        private FileTime modified;
-        private String modifiedPretty;
-        private long size;
-
-        public String getFilename() {
-            return filename;
-        }
-
-        public void setFilename(String filename) {
-            this.filename = filename;
-        }
-
-        public FileTime getModified() {
-            return modified;
-        }
-
-        public void setModified(FileTime modified) {
-            this.modified = modified;
-        }
-
-        public long getSize() {
-            return size;
-        }
-
-        public void setSize(long size) {
-            this.size = size;
-        }
-
-        public String getModifiedPretty() {
-            return modifiedPretty;
-        }
-
-        public void setModifiedPretty(String modifiedPretty) {
-            this.modifiedPretty = modifiedPretty;
-        }
-    }
-
-    public enum SortBy {
-        FILENAME, SIZE, MODIFIED
-    }
 }
