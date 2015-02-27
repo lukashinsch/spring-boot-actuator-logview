@@ -1,0 +1,56 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'jacoco'
+apply plugin: 'com.github.kt3k.coveralls'
+
+
+ext {
+    springBootVersion = '1.2.1.RELEASE'
+}
+
+jar {
+    baseName = 'spring-boot-actuator-logview'
+    version = '0.0.1-SNAPSHOT'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-freemarker:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
+    compile("org.ocpsoft.prettytime:prettytime:3.2.7.Final")
+    compile("commons-io:commons-io:2.4")
+
+    testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+}
+
+
+idea {
+    module {
+        inheritOutputDirs = false
+        outputDir = file("$buildDir/classes/main/")
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
