@@ -1,2 +1,5 @@
 include 'lib'
 
+rootProject.children.each {
+    it.buildFileName = it.name + '.gradle'
+}
