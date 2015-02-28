@@ -1,5 +1,7 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.ocpsoft.prettytime.PrettyTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +17,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import static java.util.stream.Collectors.toList;
 
@@ -35,7 +42,7 @@ public class LogViewEndpoint implements MvcEndpoint{
     @Autowired
     private Environment environment;
 
-    private final PrettyTime prettyTime = new PrettyTime();
+    private static final PrettyTime prettyTime = new PrettyTime();
 
     @RequestMapping("/")
     public String list(Model model,
@@ -46,7 +53,26 @@ public class LogViewEndpoint implements MvcEndpoint{
 
         Path currentFolder = loggingPath(base);
 
-        final List<FileEntry> files = getFileEntries(currentFolder);
+        List<FileEntry> files;
+        if (isArchive(currentFolder)) {
+            if (isZip(currentFolder.getFileName().toString())) {
+                ZipFile zipFile = new ZipFile(currentFolder.toFile());
+                files = zipFile.stream()
+                        .map(LogViewEndpoint::createFileEntry)
+                        .collect(toList());
+            }
+            else {
+                TarArchiveInputStream inputStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(currentFolder.toFile())));
+                TarArchiveEntry entry;
+                files = new ArrayList<>();
+                while ((entry = inputStream.getNextTarEntry()) != null) {
+                    files.add(createFileEntry(entry));
+                }
+            }
+        }
+        else {
+            files = getFileEntries(currentFolder);
+        }
 
         List<FileEntry> sortedFiles = sortFiles(files, sortBy, desc);
 
@@ -60,6 +86,26 @@ public class LogViewEndpoint implements MvcEndpoint{
         model.addAttribute("parent", parent);
 
         return "logview";
+    }
+
+    private static FileEntry createFileEntry(TarArchiveEntry entry) {
+        FileEntry fileEntry = new FileEntry();
+        fileEntry.setFilename(entry.getName());
+        fileEntry.setSize(entry.getSize());
+        fileEntry.setFileType(entry.isDirectory() ? FileType.DIRECTORY : FileType.FILE);
+        fileEntry.setModified(FileTime.fromMillis(entry.getLastModifiedDate().getTime()));
+        fileEntry.setModifiedPretty(prettyTime.format(new Date(entry.getLastModifiedDate().getTime())));
+        return fileEntry;
+    }
+
+    private static FileEntry createFileEntry(ZipEntry entry) {
+        FileEntry fileEntry = new FileEntry();
+        fileEntry.setFilename(entry.getName());
+        fileEntry.setSize(entry.getSize());
+        fileEntry.setFileType(entry.isDirectory() ? FileType.DIRECTORY : FileType.FILE);
+        fileEntry.setModified(FileTime.fromMillis(entry.getTime()));
+        fileEntry.setModifiedPretty(prettyTime.format(new Date(entry.getTime())));
+        return fileEntry;
     }
 
     private String getParent(Path loggingPath) {
@@ -116,8 +162,19 @@ public class LogViewEndpoint implements MvcEndpoint{
     }
 
     private boolean isArchive(Path path) {
+        if (path.toFile().isDirectory()) {
+            return false;
+        }
         String name = path.getFileName().toString();
-        return name.endsWith(".zip") || name.endsWith(".tar.gz");
+        return isZip(name) || isTarGz(name);
+    }
+
+    private boolean isTarGz(String name) {
+        return name.endsWith(".tar.gz");
+    }
+
+    private boolean isZip(String name) {
+        return name.endsWith(".zip");
     }
 
     private List<FileEntry> sortFiles(List<FileEntry> files, SortBy sortBy, boolean desc) {
@@ -145,8 +202,31 @@ public class LogViewEndpoint implements MvcEndpoint{
     public void view(@PathVariable String filename, @RequestParam(required = false) String base, HttpServletResponse response) throws IOException {
         securityCheck(filename);
 
-        InputStream is = new FileInputStream(Paths.get(loggingPath(base).toString(), filename).toFile());
-        IOUtils.copy(is, response.getOutputStream());
+        Path path = loggingPath(base);
+        InputStream inputStream = null;
+        if (isArchive(path)) {
+            if (isZip(path.getFileName().toString())) {
+                ZipFile zipFile = new ZipFile(path.toFile());
+                ZipEntry entry = zipFile.getEntry(filename);
+                inputStream = zipFile.getInputStream(entry);
+            }
+            else {
+                TarArchiveInputStream tarStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(path.toFile())));
+                TarArchiveEntry entry;
+                while ((entry = tarStream.getNextTarEntry()) != null) {
+                    if (entry.getName().equals(filename)) {
+                        System.out.println("found file: " + entry.getName());
+                        // TODO why is assigning tarStream to inputStream not working?
+                        inputStream = new ByteArrayInputStream(IOUtils.toByteArray(tarStream));
+                    }
+                }
+                Assert.notNull(inputStream, "file not found");
+            }
+        }
+        else {
+            inputStream = new FileInputStream(Paths.get(loggingPath(base).toString(), filename).toFile());
+        }
+        IOUtils.copy(inputStream, response.getOutputStream());
     }
 
     private void securityCheck(String filename) {
