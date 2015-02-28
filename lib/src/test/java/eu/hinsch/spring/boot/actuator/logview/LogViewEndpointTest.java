@@ -209,6 +209,11 @@ public class LogViewEndpointTest {
     }
 
     @Test
+    public void shouldReturnNullEndpointType() {
+        assertThat(logViewEndpoint.getEndpointType(), is(nullValue()));
+    }
+
+    @Test
     public void shouldNotAllowToListFileOutsideRoot() throws IOException {
         // given
         expectedException.expect(IllegalArgumentException.class);
