@@ -96,7 +96,12 @@ public class LogViewEndpoint implements MvcEndpoint{
             throw new RuntimeException("unable to retrieve file attribute", e);
         }
         fileEntry.setModifiedPretty(prettyTime.format(new Date(fileEntry.getModified().toMillis())));
+        fileEntry.setFileType(getFileType(path));
 
+        return fileEntry;
+    }
+
+    private FileType getFileType(Path path) {
         FileType fileType = null;
         if (path.toFile().isDirectory()) {
             fileType = FileType.DIRECTORY;
@@ -107,9 +112,7 @@ public class LogViewEndpoint implements MvcEndpoint{
         else {
             fileType = FileType.FILE;
         }
-        fileEntry.setFileType(fileType);
-
-        return fileEntry;
+        return fileType;
     }
 
     private boolean isArchive(Path path) {
