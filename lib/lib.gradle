@@ -11,17 +11,15 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'jacoco'
 apply plugin: 'com.github.kt3k.coveralls'
-apply plugin: 'maven'
-
-
 
 ext {
     springBootVersion = '1.2.1.RELEASE'
+    libVersion = '0.1.0'
 }
 
 jar {
     baseName = 'spring-boot-actuator-logview'
-    version = '0.0.1'
+    version = libVersion
 }
 
 sourceCompatibility = 1.8
@@ -30,7 +28,6 @@ targetCompatibility = 1.8
 repositories {
     mavenCentral()
 }
-
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
@@ -57,25 +54,15 @@ jacocoTestReport {
     }
 }
 
-// publish
+// sign and publish to MC is done only locally so far
 
-// TODO clean this mess up (probably depend on CI env variable?)
+if (System.getenv('CI') != 'true') {
 
-// fallbacks for CI
-ext {
-    if (!project.hasProperty('sonatypeUsername')) {
-        sonatypeUsername = ''
-    }
-    if (!project.hasProperty('sonatypePassword')) {
-        sonatypePassword = ''
-    }
-}
-if (project.hasProperty('signing.keyId')) {
     apply plugin: 'signing'
-
+    apply plugin: 'maven'
 
     group = 'eu.hinsch'
-    version = '0.0.1'
+    version = libVersion
 
     task javadocJar(type: Jar, dependsOn: javadoc) {
         classifier = 'javadoc'
@@ -89,7 +76,6 @@ if (project.hasProperty('signing.keyId')) {
 
     artifacts {
         archives jar
-
         archives javadocJar
         archives sourcesJar
     }
