@@ -125,6 +125,80 @@ public class LogViewEndpointTest {
     }
 
     @Test
+    public void shouldSetFileTypeForFile() throws IOException {
+        // given
+        createFile("A.log", "x", now);
+
+        // when
+        logViewEndpoint.list(model, SortBy.FILENAME, false, null);
+
+        // then
+        assertThat(getFileEntries().get(0).getFileType(), is(FileType.FILE));
+    }
+
+    @Test
+    public void shouldSetFileTypeForArchive() throws IOException {
+        // given
+        createFile("A.log.tar.gz", "x", now);
+
+        // when
+        logViewEndpoint.list(model, SortBy.FILENAME, false, null);
+
+        // then
+        assertThat(getFileEntries().get(0).getFileType(), is(FileType.ARCHIVE));
+    }
+
+    @Test
+    public void shouldContainEmptyParentLinkInBaseFolder() throws IOException {
+        // when
+        logViewEndpoint.list(model, SortBy.FILENAME, false, null);
+
+        // then
+        assertThat(model.asMap().get("parent"), is(""));
+    }
+
+    @Test
+    public void shouldContainEmptyParentLinkInSubfolder() throws IOException {
+        // given
+        temporaryFolder.newFolder("subfolder");
+
+        // when
+        logViewEndpoint.list(model, SortBy.FILENAME, false, "subfolder");
+
+        // then
+        assertThat(model.asMap().get("parent"), is(""));
+    }
+
+    @Test
+    public void shouldContainEmptyParentLinkInNestedSubfolder() throws IOException {
+        // given
+        temporaryFolder.newFolder("subfolder");
+        temporaryFolder.newFolder("subfolder", "nested");
+
+        // when
+        logViewEndpoint.list(model, SortBy.FILENAME, false, "subfolder/nested");
+
+        // then
+        assertThat(model.asMap().get("parent"), is("/subfolder"));
+    }
+
+    @Test
+    public void shouldIncludeSubfolderEntry() throws IOException {
+        // given
+        temporaryFolder.newFolder("subfolder");
+
+        // when
+        logViewEndpoint.list(model, SortBy.FILENAME, false, null);
+
+        // then
+        List<FileEntry> fileEntries = getFileEntries();
+        assertThat(fileEntries, hasSize(1));
+        FileEntry fileEntry = fileEntries.get(0);
+        assertThat(fileEntry.getFileType(), is(FileType.DIRECTORY));
+        assertThat(fileEntry.getFilename(), is("subfolder"));
+    }
+
+    @Test
     public void shouldEndpointBeSensitive() {
         assertThat(logViewEndpoint.isSensitive(), is(true));
     }
