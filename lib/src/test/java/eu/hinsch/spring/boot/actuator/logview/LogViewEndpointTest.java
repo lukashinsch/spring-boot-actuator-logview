@@ -1,7 +1,10 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
 import org.apache.catalina.ssi.ByteArrayServletOutputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -15,10 +18,12 @@ import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.Date;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.*;
@@ -196,6 +201,87 @@ public class LogViewEndpointTest {
         FileEntry fileEntry = fileEntries.get(0);
         assertThat(fileEntry.getFileType(), is(FileType.DIRECTORY));
         assertThat(fileEntry.getFilename(), is("subfolder"));
+    }
+
+    @Test
+    public void shouldListZipContent() throws IOException {
+        // given
+        createZipArchive("file.zip", "A.log", "content");
+
+        // when
+        logViewEndpoint.list(model, SortBy.FILENAME, false, "file.zip");
+
+        // then
+        List<FileEntry> fileEntries = getFileEntries();
+        assertThat(fileEntries, hasSize(1));
+        FileEntry fileEntry = fileEntries.get(0);
+        assertThat(fileEntry.getFilename(), is("A.log"));
+    }
+
+    @Test
+    public void shouldViewZipFileContent() throws IOException {
+        // given
+        createZipArchive("file.zip", "A.log", "content");
+        ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
+        when(response.getOutputStream()).thenReturn(outputStream);
+
+        // when
+        logViewEndpoint.view("A.log", "file.zip", response);
+
+        // then
+        assertThat(new String(outputStream.toByteArray()), is("content"));
+    }
+
+    private void createZipArchive(String archiveFileName, String contentFileName, String content) throws IOException {
+        try(ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(new File(temporaryFolder.getRoot(), archiveFileName)))) {
+            ZipEntry zipEntry = new ZipEntry(contentFileName);
+            zos.putNextEntry(zipEntry);
+            IOUtils.write(content, zos);
+        }
+    }
+
+    @Test
+    public void shouldListTarGzContent() throws IOException {
+        // given
+        createTarGzArchive("file.tar.gz", "A.log", "content");
+
+        // when
+        logViewEndpoint.list(model, SortBy.FILENAME, false, "file.tar.gz");
+
+        // then
+        List<FileEntry> fileEntries = getFileEntries();
+        assertThat(fileEntries, hasSize(1));
+        FileEntry fileEntry = fileEntries.get(0);
+        assertThat(fileEntry.getFilename(), is("A.log"));
+    }
+
+    @Test
+    public void shouldViewTarGzFileContent() throws IOException {
+        // given
+        createTarGzArchive("file.tar.gz", "A.log", "content");
+        ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
+        when(response.getOutputStream()).thenReturn(outputStream);
+
+        // when
+        logViewEndpoint.view("A.log", "file.tar.gz", response);
+
+        // then
+        assertThat(new String(outputStream.toByteArray()), is("content"));
+    }
+
+    private void createTarGzArchive(String archiveFileName, String contentFileName, String content) throws IOException {
+
+        try(TarArchiveOutputStream tos = new TarArchiveOutputStream(new GZIPOutputStream(
+                new BufferedOutputStream(new FileOutputStream(
+                        new File(temporaryFolder.getRoot(), archiveFileName)))))) {
+            tos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_STAR);
+            tos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
+            TarArchiveEntry archiveEntry = new TarArchiveEntry(contentFileName);
+            archiveEntry.setSize(content.length());
+            tos.putArchiveEntry(archiveEntry);
+            IOUtils.write(content, tos);
+            tos.closeArchiveEntry();
+        }
     }
 
     @Test

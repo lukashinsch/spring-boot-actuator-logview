@@ -1,7 +1,5 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
-import org.apache.commons.io.IOUtils;
-import org.ocpsoft.prettytime.PrettyTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
@@ -15,14 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -32,10 +28,17 @@ import static java.util.stream.Collectors.toList;
 @ConditionalOnProperty("logging.path")
 public class LogViewEndpoint implements MvcEndpoint{
 
-    @Autowired
     private Environment environment;
 
-    private final PrettyTime prettyTime = new PrettyTime();
+    private static List<FileProvider> fileProviders;
+
+    @Autowired
+    public LogViewEndpoint(Environment environment) {
+        this.environment = environment;
+        fileProviders = asList(new FileSystemFileProvider(),
+                new ZipArchiveFileProvider(),
+                new TarGzArchiveFileProvider());
+    }
 
     @RequestMapping("/")
     public String list(Model model,
@@ -46,8 +49,7 @@ public class LogViewEndpoint implements MvcEndpoint{
 
         Path currentFolder = loggingPath(base);
 
-        final List<FileEntry> files = getFileEntries(currentFolder);
-
+        List<FileEntry> files = getFileProvider(currentFolder).getFileEntries(currentFolder);
         List<FileEntry> sortedFiles = sortFiles(files, sortBy, desc);
 
         model.addAttribute("sortBy", sortBy);
@@ -55,11 +57,16 @@ public class LogViewEndpoint implements MvcEndpoint{
         model.addAttribute("files", sortedFiles);
         model.addAttribute("currentFolder", currentFolder.toAbsolutePath().toString());
         model.addAttribute("base", base != null ? base : "");
-
-        String parent = getParent(currentFolder);
-        model.addAttribute("parent", parent);
+        model.addAttribute("parent", getParent(currentFolder));
 
         return "logview";
+    }
+
+    private FileProvider getFileProvider(Path folder) {
+        return fileProviders.stream()
+                .filter(provider -> provider.canHandle(folder))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("no file provider found for " + folder.toString()));
     }
 
     private String getParent(Path loggingPath) {
@@ -77,47 +84,6 @@ public class LogViewEndpoint implements MvcEndpoint{
     private Path loggingPath(String base) {
         String loggingPath = environment.getProperty("logging.path");
         return base != null ? Paths.get(loggingPath, base) : Paths.get(loggingPath);
-    }
-
-    private List<FileEntry> getFileEntries(Path loggingPath) throws IOException {
-        final List<FileEntry> files = new ArrayList<>();
-        Files.newDirectoryStream(loggingPath)
-                .forEach((path) -> files.add(createFileEntry(path)));
-        return files;
-    }
-
-    private FileEntry createFileEntry(Path path)  {
-        FileEntry fileEntry = new FileEntry();
-        fileEntry.setFilename(path.getFileName().toString());
-        try {
-            fileEntry.setModified(Files.getLastModifiedTime(path));
-            fileEntry.setSize(Files.size(path));
-        } catch (IOException e) {
-            throw new RuntimeException("unable to retrieve file attribute", e);
-        }
-        fileEntry.setModifiedPretty(prettyTime.format(new Date(fileEntry.getModified().toMillis())));
-        fileEntry.setFileType(getFileType(path));
-
-        return fileEntry;
-    }
-
-    private FileType getFileType(Path path) {
-        FileType fileType = null;
-        if (path.toFile().isDirectory()) {
-            fileType = FileType.DIRECTORY;
-        }
-        else if (isArchive(path)) {
-            fileType = FileType.ARCHIVE;
-        }
-        else {
-            fileType = FileType.FILE;
-        }
-        return fileType;
-    }
-
-    private boolean isArchive(Path path) {
-        String name = path.getFileName().toString();
-        return name.endsWith(".zip") || name.endsWith(".tar.gz");
     }
 
     private List<FileEntry> sortFiles(List<FileEntry> files, SortBy sortBy, boolean desc) {
@@ -144,9 +110,8 @@ public class LogViewEndpoint implements MvcEndpoint{
     @RequestMapping("/view/{filename}/")
     public void view(@PathVariable String filename, @RequestParam(required = false) String base, HttpServletResponse response) throws IOException {
         securityCheck(filename);
-
-        InputStream is = new FileInputStream(Paths.get(loggingPath(base).toString(), filename).toFile());
-        IOUtils.copy(is, response.getOutputStream());
+        Path path = loggingPath(base);
+        getFileProvider(path).streamContent(path, filename, response.getOutputStream());
     }
 
     private void securityCheck(String filename) {
