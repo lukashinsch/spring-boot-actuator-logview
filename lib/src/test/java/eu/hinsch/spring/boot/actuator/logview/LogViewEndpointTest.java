@@ -332,7 +332,11 @@ public class LogViewEndpointTest {
         logViewEndpoint.search("line2", response);
 
         // then
-        assertThat(new String(outputStream.toByteArray()), is("[A.log] A-line2" + sep + "[B.log] B-line2" + sep));
+        String output = new String(outputStream.toByteArray());
+        assertThat(output, containsString("[A.log] A-line2"));
+        assertThat(output, containsString("[B.log] B-line2"));
+        assertThat(output, not(containsString("line1")));
+        assertThat(output, not(containsString("line3")));
     }
 
     private ByteArrayServletOutputStream mockResponseOutputStream() throws IOException {
