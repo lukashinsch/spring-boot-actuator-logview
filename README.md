@@ -4,25 +4,38 @@
 # spring-boot-actuator-logview
 (Very) simple logfile viewer as spring boot actuator endpoint
 
-Note: this is currently work-in-progress:
-* no library yet, includes sample app
-
 Features
 * allow quick access to spring-boot web application logfiles
 * uses actuator framework to provide management endpoint
-
-Planned features
-* browser sub-directories
-* look inside archived (compressed) log files
-* search in files
-* support other templating engines other than freemarker
+* list log folder content
+* view inidividual logfiles
+* view content of log archives (*.zip, *.tar.gz)
+* browse subdirectories
+* search in (non-compressed) files
 
 Dependencies
 * spring boot (web, actuator, freemarker) (tested with 1.2.1.RELESE)
 * prettytime
 * commons-io
+* commons-compress
 
 Howto use
-* include LogViewerEndpoint and logview.ftl in project
+* include library on classpath of spring-boot app
 * configure logging.path in spring environment
 * endpoint will be available under <management-base>/log
+
+Maven
+```xml
+<dependency>
+    <groupId>eu.hinsch</groupId>
+    <artifactId>spring-boot-actuator-logview</artifactId>
+    <version>0.2.0</version>
+</dependency>
+```
+
+Gradle
+```groovy
+compile 'eu.hinsch:spring-boot-actuator-logview:0.2.0'
+```
+Note
+* lib depends on spring-boot-starter-freemarker, so it will currently not work with another templating engine for the main app
