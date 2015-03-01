@@ -1,5 +1,6 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Path;
@@ -112,6 +114,36 @@ public class LogViewEndpoint implements MvcEndpoint{
         securityCheck(filename);
         Path path = loggingPath(base);
         getFileProvider(path).streamContent(path, filename, response.getOutputStream());
+    }
+
+    @RequestMapping("/search")
+    public void search(@RequestParam String term, HttpServletResponse response) throws IOException {
+        Path folder = loggingPath(null);
+        List<FileEntry> files = getFileProvider(folder).getFileEntries(folder);
+        List<FileEntry> sortedFiles = sortFiles(files, SortBy.MODIFIED, false);
+
+        ServletOutputStream outputStream = response.getOutputStream();
+
+        sortedFiles.stream()
+                .filter(file -> file.getFileType().equals(FileType.FILE))
+                .forEach(file -> searchAndStreamFile(file, term, outputStream));
+    }
+
+    private void searchAndStreamFile(FileEntry fileEntry, String term, OutputStream outputStream) {
+        Path folder = loggingPath(null);
+        try {
+            List<String> lines = IOUtils.readLines(new FileInputStream(new File(folder.toFile().toString(), fileEntry.getFilename())))
+                    .stream()
+                    .filter(line -> line.contains(term))
+                    .map(line -> "[" + fileEntry.getFilename() + "] " + line)
+                    .collect(toList());
+            for (String line : lines) {
+                outputStream.write(line.getBytes());
+                outputStream.write(System.lineSeparator().getBytes());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("error reading file", e);
+        }
     }
 
     private void securityCheck(String filename) {
