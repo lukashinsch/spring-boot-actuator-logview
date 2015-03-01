@@ -324,7 +324,7 @@ public class LogViewEndpointTest {
     public void shouldSearchInFiles() throws IOException {
         // given
         String sep = System.lineSeparator();
-        createFile("A.log", "A-line1" + sep + "A-line2" + sep + "A-line3", now);
+        createFile("A.log", "A-line1" + sep + "A-line2" + sep + "A-line3", now - 1);
         createFile("B.log", "B-line1" + sep + "B-line2" + sep + "B-line3", now);
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
