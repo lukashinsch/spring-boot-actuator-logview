@@ -369,7 +369,7 @@ public class LogViewEndpointTest {
     private void createFile(String filename, String content, long modified) throws IOException {
         File file = new File(temporaryFolder.getRoot(), filename);
         FileUtils.write(file, content);
-        file.setLastModified(modified);
+        assertThat(file.setLastModified(modified), is(true));
     }
 
 }
