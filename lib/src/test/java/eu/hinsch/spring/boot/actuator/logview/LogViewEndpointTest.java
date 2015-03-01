@@ -222,8 +222,7 @@ public class LogViewEndpointTest {
     public void shouldViewZipFileContent() throws IOException {
         // given
         createZipArchive("file.zip", "A.log", "content");
-        ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
-        when(response.getOutputStream()).thenReturn(outputStream);
+        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("A.log", "file.zip", response);
@@ -259,8 +258,7 @@ public class LogViewEndpointTest {
     public void shouldViewTarGzFileContent() throws IOException {
         // given
         createTarGzArchive("file.tar.gz", "A.log", "content");
-        ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
-        when(response.getOutputStream()).thenReturn(outputStream);
+        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("A.log", "file.tar.gz", response);
@@ -313,14 +311,38 @@ public class LogViewEndpointTest {
     public void shouldViewFile() throws IOException {
         // given
         createFile("file.log", "abc", now);
-        ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
-        when(response.getOutputStream()).thenReturn(outputStream);
+        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("file.log", null, response);
 
         // then
         assertThat(new String(outputStream.toByteArray()), is("abc"));
+    }
+
+    @Test
+    public void shouldSearchInFiles() throws IOException {
+        // given
+        String sep = System.lineSeparator();
+        createFile("A.log", "A-line1" + sep + "A-line2" + sep + "A-line3", now - 1);
+        createFile("B.log", "B-line1" + sep + "B-line2" + sep + "B-line3", now);
+        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+
+        // when
+        logViewEndpoint.search("line2", response);
+
+        // then
+        String output = new String(outputStream.toByteArray());
+        assertThat(output, containsString("[A.log] A-line2"));
+        assertThat(output, containsString("[B.log] B-line2"));
+        assertThat(output, not(containsString("line1")));
+        assertThat(output, not(containsString("line3")));
+    }
+
+    private ByteArrayServletOutputStream mockResponseOutputStream() throws IOException {
+        ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
+        when(response.getOutputStream()).thenReturn(outputStream);
+        return outputStream;
     }
 
     private List<String> getFileNames() {
@@ -351,7 +373,7 @@ public class LogViewEndpointTest {
     private void createFile(String filename, String content, long modified) throws IOException {
         File file = new File(temporaryFolder.getRoot(), filename);
         FileUtils.write(file, content);
-        file.setLastModified(modified);
+        assertThat(file.setLastModified(modified), is(true));
     }
 
 }

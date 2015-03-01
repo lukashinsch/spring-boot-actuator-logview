@@ -16,8 +16,6 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'spring-boot'
-// apply plugin: 'jacoco'
-// apply plugin: 'com.github.kt3k.coveralls'
 
 
 jar {
@@ -46,12 +44,3 @@ idea {
         outputDir = file("$buildDir/classes/main/")
     }
 }
-
-/*
-jacocoTestReport {
-    reports {
-        xml.enabled = true // coveralls plugin depends on xml format report
-        html.enabled = true
-    }
-}
-*/

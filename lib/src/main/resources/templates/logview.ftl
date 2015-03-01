@@ -2,7 +2,12 @@
     <head>
         <title>Logfiles</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"/>
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
+        <style>
+            .form-group {
+                margin-right: 10px;
+            }
+        </style>
     </head>
     <body>
             <div class="container">
@@ -11,7 +16,21 @@
                 </div>
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Current location ${currentFolder}
+                    <div class="form-inline">
+                        <form action="search" method="get">
+                            <div class="form-group">
+                                <label>Current location</label>
+                                <p class="form-control-static">${currentFolder}</p>
+                            </div>
+                            <#if base == "">
+                                <div class="form-group">
+                                    <label for="term">Search</label>
+                                    <input class="form-control" id="term" name="term" type="text"/>
+                                </div>
+                                <button class="btn btn-default">Search</button>
+                            </#if>
+                        </form>
+                    </div>
                 </div>
                 <table class="table table-striped table-hover">
                     <thead>

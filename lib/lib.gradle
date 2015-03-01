@@ -55,6 +55,13 @@ jacocoTestReport {
     }
 }
 
+test {
+    testLogging {
+        events "failed"
+        exceptionFormat "full" // show assertion errors in build
+    }
+}
+
 // sign and publish to MC is done only locally so far
 
 if (System.getenv('CI') != 'true') {
