@@ -1,5 +1,8 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.Endpoint;
@@ -8,10 +11,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -26,13 +31,12 @@ import static java.util.stream.Collectors.toList;
 /**
  * Created by lh on 23/02/15.
  */
-@Component
-@ConditionalOnProperty("logging.path")
 public class LogViewEndpoint implements MvcEndpoint{
 
     private Environment environment;
 
     private static List<FileProvider> fileProviders;
+    private final Configuration freemarkerConfig;
 
     @Autowired
     public LogViewEndpoint(Environment environment) {
@@ -40,13 +44,16 @@ public class LogViewEndpoint implements MvcEndpoint{
         fileProviders = asList(new FileSystemFileProvider(),
                 new ZipArchiveFileProvider(),
                 new TarGzArchiveFileProvider());
+        freemarkerConfig = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
+        freemarkerConfig.setClassForTemplateLoading(this.getClass(), "/templates");
     }
 
     @RequestMapping("/")
-    public String list(Model model,
+    @ResponseBody
+    public String list(Model model, // TODO model should no longer be injected
                        @RequestParam(required = false, defaultValue = "FILENAME") SortBy sortBy,
                        @RequestParam(required = false, defaultValue = "false") boolean desc,
-                       @RequestParam(required = false) String base) throws IOException {
+                       @RequestParam(required = false) String base) throws IOException, TemplateException {
         securityCheck(base);
 
         Path currentFolder = loggingPath(base);
@@ -61,7 +68,7 @@ public class LogViewEndpoint implements MvcEndpoint{
         model.addAttribute("base", base != null ? base : "");
         model.addAttribute("parent", getParent(currentFolder));
 
-        return "logview";
+        return FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerConfig.getTemplate("logview.ftl"), model);
     }
 
     private FileProvider getFileProvider(Path folder) {

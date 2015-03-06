@@ -61,7 +61,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldReturnEmptyFileListForEmptyDirectory() throws IOException {
+    public void shouldReturnEmptyFileListForEmptyDirectory() throws Exception {
         // when
         logViewEndpoint.list(model, SortBy.FILENAME, false, null);
 
@@ -71,7 +71,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldListSortedByFilename() throws IOException {
+    public void shouldListSortedByFilename() throws Exception {
         // given
         createFile("B.log", "x", now);
         createFile("A.log", "x", now);
@@ -85,7 +85,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldListReverseSortedByFilename() throws IOException {
+    public void shouldListReverseSortedByFilename() throws Exception {
         // given
         createFile("B.log", "x", now);
         createFile("A.log", "x", now);
@@ -99,7 +99,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldListSortedBySize() throws IOException {
+    public void shouldListSortedBySize() throws Exception {
         // given
         createFile("A.log", "xx", now);
         createFile("B.log", "x", now);
@@ -114,7 +114,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldListSortedByDate() throws IOException {
+    public void shouldListSortedByDate() throws Exception {
         // given
         // TODO java 8 date api
         createFile("A.log", "x", now);
@@ -130,7 +130,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldSetFileTypeForFile() throws IOException {
+    public void shouldSetFileTypeForFile() throws Exception {
         // given
         createFile("A.log", "x", now);
 
@@ -142,7 +142,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldSetFileTypeForArchive() throws IOException {
+    public void shouldSetFileTypeForArchive() throws Exception {
         // given
         createFile("A.log.tar.gz", "x", now);
 
@@ -154,7 +154,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldContainEmptyParentLinkInBaseFolder() throws IOException {
+    public void shouldContainEmptyParentLinkInBaseFolder() throws Exception {
         // when
         logViewEndpoint.list(model, SortBy.FILENAME, false, null);
 
@@ -163,7 +163,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldContainEmptyParentLinkInSubfolder() throws IOException {
+    public void shouldContainEmptyParentLinkInSubfolder() throws Exception {
         // given
         temporaryFolder.newFolder("subfolder");
 
@@ -175,7 +175,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldContainEmptyParentLinkInNestedSubfolder() throws IOException {
+    public void shouldContainEmptyParentLinkInNestedSubfolder() throws Exception {
         // given
         temporaryFolder.newFolder("subfolder");
         temporaryFolder.newFolder("subfolder", "nested");
@@ -188,7 +188,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldIncludeSubfolderEntry() throws IOException {
+    public void shouldIncludeSubfolderEntry() throws Exception {
         // given
         temporaryFolder.newFolder("subfolder");
 
@@ -204,7 +204,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldListZipContent() throws IOException {
+    public void shouldListZipContent() throws Exception {
         // given
         createZipArchive("file.zip", "A.log", "content");
 
@@ -219,7 +219,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldViewZipFileContent() throws IOException {
+    public void shouldViewZipFileContent() throws Exception {
         // given
         createZipArchive("file.zip", "A.log", "content");
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
@@ -231,7 +231,7 @@ public class LogViewEndpointTest {
         assertThat(new String(outputStream.toByteArray()), is("content"));
     }
 
-    private void createZipArchive(String archiveFileName, String contentFileName, String content) throws IOException {
+    private void createZipArchive(String archiveFileName, String contentFileName, String content) throws Exception {
         try(ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(new File(temporaryFolder.getRoot(), archiveFileName)))) {
             ZipEntry zipEntry = new ZipEntry(contentFileName);
             zos.putNextEntry(zipEntry);
@@ -240,7 +240,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldListTarGzContent() throws IOException {
+    public void shouldListTarGzContent() throws Exception {
         // given
         createTarGzArchive("file.tar.gz", "A.log", "content");
 
@@ -255,7 +255,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldViewTarGzFileContent() throws IOException {
+    public void shouldViewTarGzFileContent() throws Exception {
         // given
         createTarGzArchive("file.tar.gz", "A.log", "content");
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
@@ -267,7 +267,7 @@ public class LogViewEndpointTest {
         assertThat(new String(outputStream.toByteArray()), is("content"));
     }
 
-    private void createTarGzArchive(String archiveFileName, String contentFileName, String content) throws IOException {
+    private void createTarGzArchive(String archiveFileName, String contentFileName, String content) throws Exception {
 
         try(TarArchiveOutputStream tos = new TarArchiveOutputStream(new GZIPOutputStream(
                 new BufferedOutputStream(new FileOutputStream(
@@ -298,7 +298,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldNotAllowToListFileOutsideRoot() throws IOException {
+    public void shouldNotAllowToListFileOutsideRoot() throws Exception {
         // given
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage(containsString("this String argument must not contain the substring [..]"));
@@ -308,7 +308,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldViewFile() throws IOException {
+    public void shouldViewFile() throws Exception {
         // given
         createFile("file.log", "abc", now);
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
@@ -321,7 +321,7 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldSearchInFiles() throws IOException {
+    public void shouldSearchInFiles() throws Exception {
         // given
         String sep = System.lineSeparator();
         createFile("A.log", "A-line1" + sep + "A-line2" + sep + "A-line3", now - 1);
@@ -339,7 +339,7 @@ public class LogViewEndpointTest {
         assertThat(output, not(containsString("line3")));
     }
 
-    private ByteArrayServletOutputStream mockResponseOutputStream() throws IOException {
+    private ByteArrayServletOutputStream mockResponseOutputStream() throws Exception {
         ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
         when(response.getOutputStream()).thenReturn(outputStream);
         return outputStream;
@@ -370,7 +370,7 @@ public class LogViewEndpointTest {
         return (List<FileEntry>) model.asMap().get("files");
     }
 
-    private void createFile(String filename, String content, long modified) throws IOException {
+    private void createFile(String filename, String content, long modified) throws Exception {
         File file = new File(temporaryFolder.getRoot(), filename);
         FileUtils.write(file, content);
         assertThat(file.setLastModified(modified), is(true));
