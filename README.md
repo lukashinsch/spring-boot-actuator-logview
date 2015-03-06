@@ -29,13 +29,13 @@ Maven
 <dependency>
     <groupId>eu.hinsch</groupId>
     <artifactId>spring-boot-actuator-logview</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
 </dependency>
 ```
 
 Gradle
 ```groovy
-compile 'eu.hinsch:spring-boot-actuator-logview:0.2.0'
+compile 'eu.hinsch:spring-boot-actuator-logview:0.2.1'
 ```
 Note
 * lib depends on spring-boot-starter-freemarker, so it will currently not work with another templating engine for the main app
