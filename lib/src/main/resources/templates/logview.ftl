@@ -62,7 +62,7 @@
                                 </#if>
                                 &nbsp;
                                 <#if file.fileType == 'FILE'>
-                                    <a href="view/${file.filename}/?base=${base}">${file.filename}</a>
+                                    <a href="view?filename=${file.filename}&base=${base}">${file.filename}</a>
                                 </#if>
                                 <#if file.fileType == 'ARCHIVE'>
                                     <a href="?base=${base}/${file.filename}">${file.filename}</a>
