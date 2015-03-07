@@ -1,6 +1,6 @@
 [![Coverage Status](https://coveralls.io/repos/lukashinsch/spring-boot-actuator-logview/badge.svg?branch=master)](https://coveralls.io/r/lukashinsch/spring-boot-actuator-logview?branch=master)
 [![Build Status](https://travis-ci.org/lukashinsch/spring-boot-actuator-logview.svg?branch=master)](https://travis-ci.org/lukashinsch/spring-boot-actuator-logview)
-![Maven Central](https://maven-badges.herokuapp.com/maven-central/eu.hinsch/spring-boot-actuator-logview/badge.svg)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/eu.hinsch/spring-boot-actuator-logview/badge.svg)](https://maven-badges.herokuapp.com/maven-central/eu.hinsch/spring-boot-actuator-logview/)
 
 # spring-boot-actuator-logview
 (Very) simple logfile viewer as spring boot actuator endpoint
