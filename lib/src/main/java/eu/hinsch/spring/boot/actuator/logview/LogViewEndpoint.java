@@ -49,7 +49,7 @@ public class LogViewEndpoint implements MvcEndpoint{
         freemarkerConfig.setClassForTemplateLoading(this.getClass(), "/templates");
     }
 
-    @RequestMapping("/")
+    @RequestMapping
     @ResponseBody
     public String list(Model model, // TODO model should no longer be injected
                        @RequestParam(required = false, defaultValue = "FILENAME") SortBy sortBy,
