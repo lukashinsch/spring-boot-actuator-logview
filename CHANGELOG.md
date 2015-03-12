@@ -1,5 +1,8 @@
 # spring-boot-actuator-logview changelog
 
+## 0.2.3
+- don't require trailing slash in endpoint url ("/log" instead of "/log/")
+
 ## 0.2.2
 - allow viewing logfiles in subfolders inside archives
 
