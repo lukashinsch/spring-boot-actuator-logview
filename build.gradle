@@ -44,3 +44,7 @@ idea {
         outputDir = file("$buildDir/classes/main/")
     }
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
