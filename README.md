@@ -3,7 +3,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/eu.hinsch/spring-boot-actuator-logview/badge.svg)](https://maven-badges.herokuapp.com/maven-central/eu.hinsch/spring-boot-actuator-logview/)
 
 # spring-boot-actuator-logview
-(Very) simple logfile viewer as spring boot actuator endpoint
+Simple logfile viewer as spring boot actuator endpoint
 
 Features
 * allow quick access to spring-boot web application logfiles
