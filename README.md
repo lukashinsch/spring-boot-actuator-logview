@@ -12,7 +12,7 @@ Features
 * view inidividual logfiles
 * view content of log archives (*.zip, *.tar.gz)
 * browse subdirectories
-* search in (non-compressed) files
+* search in (non-compressed) files in logging root folder
 
 Dependencies
 * spring boot (web, actuator, freemarker) (tested with 1.2.1.RELESE)
