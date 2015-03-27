@@ -6,11 +6,20 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 @Configuration
-@ConditionalOnProperty("logging.path")
 public class LogViewEndpointAutoconfig {
 
+    public static final String LOGGING_PATH = "logging.path";
+    public static final String ENDPOINTS_LOGVIEW_PATH = "endpoints.logview.path";
+
+    @ConditionalOnProperty(LOGGING_PATH)
     @Bean
-    public LogViewEndpoint logViewEndpoint(Environment environment) {
-        return new LogViewEndpoint(environment);
+    public LogViewEndpoint logViewEndpointWithDefaultPath(Environment environment) {
+        return new LogViewEndpoint(environment.getRequiredProperty(LOGGING_PATH));
+    }
+
+    @ConditionalOnProperty(ENDPOINTS_LOGVIEW_PATH)
+    @Bean
+    public LogViewEndpoint logViewEndpointWithDeviatingPath(Environment environment) {
+        return new LogViewEndpoint(environment.getRequiredProperty(ENDPOINTS_LOGVIEW_PATH));
     }
 }

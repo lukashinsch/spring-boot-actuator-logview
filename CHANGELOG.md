@@ -1,7 +1,8 @@
 # spring-boot-actuator-logview changelog
 
 ## 0.2.4
-- (fixes [#11](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/11))
+- show file content when calling endpoint url without trailing slash (fixes [#11](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/11))
+- allow to specify logging path via "endpoints.logview.path" property (fixes [#3](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/3)
 
 ## 0.2.3
 - don't require trailing slash in endpoint url ("/log" instead of "/log/")

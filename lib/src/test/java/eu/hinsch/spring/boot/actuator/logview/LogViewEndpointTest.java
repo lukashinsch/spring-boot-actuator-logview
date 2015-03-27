@@ -10,10 +10,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.core.env.Environment;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
@@ -44,12 +42,8 @@ public class LogViewEndpointTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     @Mock
-    private Environment environment;
-
-    @Mock
     private HttpServletResponse response;
 
-    @InjectMocks
     private LogViewEndpoint logViewEndpoint;
 
     private Model model;
@@ -58,8 +52,7 @@ public class LogViewEndpointTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        when(environment.getProperty("logging.path"))
-                .thenReturn(temporaryFolder.getRoot().getAbsolutePath());
+        logViewEndpoint = new LogViewEndpoint(temporaryFolder.getRoot().getAbsolutePath());
         model = new ExtendedModelMap();
         now = new Date().getTime();
     }

@@ -20,7 +20,12 @@ public class LogViewEndpointAutoconfigTest {
     }
 
     @Test
-    public void shouldCreateBean() {
-        assertThat(new LogViewEndpointAutoconfig().logViewEndpoint(environment), notNullValue());
+    public void shouldCreateBeanForDefaultPath() {
+        assertThat(new LogViewEndpointAutoconfig().logViewEndpointWithDefaultPath(environment), notNullValue());
+    }
+
+    @Test
+    public void shouldCreateBeanForDeviatingPath() {
+        assertThat(new LogViewEndpointAutoconfig().logViewEndpointWithDeviatingPath(environment), notNullValue());
     }
 }

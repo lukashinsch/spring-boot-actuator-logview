@@ -6,7 +6,6 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
-import org.springframework.core.env.Environment;
 import org.springframework.ui.Model;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.util.Assert;
@@ -34,14 +33,13 @@ import static java.util.stream.Collectors.toList;
  */
 public class LogViewEndpoint implements MvcEndpoint{
 
-    private Environment environment;
-
     private static List<FileProvider> fileProviders;
     private final Configuration freemarkerConfig;
+    private String loggingPath;
 
     @Autowired
-    public LogViewEndpoint(Environment environment) {
-        this.environment = environment;
+    public LogViewEndpoint(String loggingPath) {
+        this.loggingPath = loggingPath;
         fileProviders = asList(new FileSystemFileProvider(),
                 new ZipArchiveFileProvider(),
                 new TarGzArchiveFileProvider());
@@ -97,7 +95,6 @@ public class LogViewEndpoint implements MvcEndpoint{
     }
 
     private Path loggingPath(String base) {
-        String loggingPath = environment.getProperty("logging.path");
         return base != null ? Paths.get(loggingPath, base) : Paths.get(loggingPath);
     }
 
