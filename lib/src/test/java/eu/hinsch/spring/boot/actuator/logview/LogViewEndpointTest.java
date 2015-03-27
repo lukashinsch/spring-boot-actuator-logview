@@ -18,7 +18,10 @@ import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -28,6 +31,7 @@ import java.util.zip.ZipOutputStream;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings("unchecked")
@@ -280,6 +284,15 @@ public class LogViewEndpointTest {
             IOUtils.write(content, tos);
             tos.closeArchiveEntry();
         }
+    }
+
+    @Test
+    public void shouldRedirectWithoutTrainingSlash() throws IOException {
+        // when
+        logViewEndpoint.redirect(response);
+
+        // then
+        verify(response).sendRedirect("log/");
     }
 
     @Test

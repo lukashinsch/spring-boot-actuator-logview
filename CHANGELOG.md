@@ -1,5 +1,8 @@
 # spring-boot-actuator-logview changelog
 
+## 0.2.4
+- (fixes [#11](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/11))
+
 ## 0.2.3
 - don't require trailing slash in endpoint url ("/log" instead of "/log/")
 
