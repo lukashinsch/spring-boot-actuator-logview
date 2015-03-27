@@ -15,7 +15,7 @@ Features
 * search in (non-compressed) files in logging root folder
 
 Dependencies
-* spring boot (web, actuator, freemarker) (tested with 1.2.1.RELESE)
+* spring boot (web, actuator, freemarker) (tested with 1.2.1.RELEASE)
 * prettytime
 * commons-io
 * commons-compress
