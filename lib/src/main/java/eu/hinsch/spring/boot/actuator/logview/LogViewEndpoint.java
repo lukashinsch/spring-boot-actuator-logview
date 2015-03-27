@@ -50,6 +50,11 @@ public class LogViewEndpoint implements MvcEndpoint{
     }
 
     @RequestMapping
+    public void redirect(HttpServletResponse response) throws IOException {
+        response.sendRedirect("log/");
+    }
+
+    @RequestMapping("/")
     @ResponseBody
     public String list(Model model, // TODO model should no longer be injected
                        @RequestParam(required = false, defaultValue = "FILENAME") SortBy sortBy,
