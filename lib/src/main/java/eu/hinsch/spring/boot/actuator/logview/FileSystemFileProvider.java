@@ -77,7 +77,7 @@ public class FileSystemFileProvider extends AbstractFileProvider {
             int i = 0;
             String line;
             List<String> content = new ArrayList<>();
-            while ((line = reader.readLine()) != null && i++ <= lines) {
+            while ((line = reader.readLine()) != null && i++ < lines) {
                 content.add(line);
             }
             Collections.reverse(content);
