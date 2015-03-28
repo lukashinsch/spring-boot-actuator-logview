@@ -222,7 +222,7 @@ public class LogViewEndpointTest {
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
-        logViewEndpoint.view("A.log", "file.zip", response);
+        logViewEndpoint.view("A.log", "file.zip", null, response);
 
         // then
         assertThat(new String(outputStream.toByteArray()), is("content"));
@@ -258,7 +258,7 @@ public class LogViewEndpointTest {
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
-        logViewEndpoint.view("A.log", "file.tar.gz", response);
+        logViewEndpoint.view("A.log", "file.tar.gz", null, response);
 
         // then
         assertThat(new String(outputStream.toByteArray()), is("content"));
@@ -310,7 +310,7 @@ public class LogViewEndpointTest {
         expectedException.expectMessage(containsString("this String argument must not contain the substring [..]"));
 
         // when
-        logViewEndpoint.view("../somefile", null, null);
+        logViewEndpoint.view("../somefile", null, null, null);
     }
 
     @Test
@@ -320,7 +320,7 @@ public class LogViewEndpointTest {
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
-        logViewEndpoint.view("file.log", null, response);
+        logViewEndpoint.view("file.log", null, null, response);
 
         // then
         assertThat(new String(outputStream.toByteArray()), is("abc"));
