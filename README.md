@@ -22,7 +22,8 @@ Dependencies
 
 Howto use
 * include library on classpath of spring-boot app
-* configure logging.path in spring environment
+* configure logging.path in spring environment 
+(alternatively - when using custom logging configuration or logging.file - use endpoints.logview.path)
 * endpoint will be available under <management-base>/log
 
 Maven
@@ -30,13 +31,13 @@ Maven
 <dependency>
     <groupId>eu.hinsch</groupId>
     <artifactId>spring-boot-actuator-logview</artifactId>
-    <version>0.2.4</version>
+    <version>0.2.5</version>
 </dependency>
 ```
 
 Gradle
 ```groovy
-compile 'eu.hinsch:spring-boot-actuator-logview:0.2.4'
+compile 'eu.hinsch:spring-boot-actuator-logview:0.2.5'
 ```
 Note
 * lib depends on spring-boot-starter-freemarker, so it will currently not work with another templating engine for the main app
