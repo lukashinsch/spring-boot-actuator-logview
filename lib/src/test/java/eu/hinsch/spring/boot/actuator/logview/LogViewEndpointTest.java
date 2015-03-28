@@ -222,7 +222,7 @@ public class LogViewEndpointTest {
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
-        logViewEndpoint.view("A.log", "file.zip", response);
+        logViewEndpoint.view("A.log", "file.zip", null, response);
 
         // then
         assertThat(new String(outputStream.toByteArray()), is("content"));
@@ -234,6 +234,17 @@ public class LogViewEndpointTest {
             zos.putNextEntry(zipEntry);
             IOUtils.write(content, zos);
         }
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void shouldThrowExceptionWhenCallingTailForZip() throws Exception {
+        // given
+        createZipArchive("file.zip", "A.log", "content");
+
+        // when
+        logViewEndpoint.view("A.log", "file.zip", 1, response);
+
+        // then -> exception
     }
 
     @Test
@@ -258,10 +269,21 @@ public class LogViewEndpointTest {
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
-        logViewEndpoint.view("A.log", "file.tar.gz", response);
+        logViewEndpoint.view("A.log", "file.tar.gz", null, response);
 
         // then
         assertThat(new String(outputStream.toByteArray()), is("content"));
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void shouldThrowExceptionWhenCallingTailForTarGz() throws Exception {
+        // given
+        createTarGzArchive("file.tar.gz", "A.log", "content");
+
+        // when
+        logViewEndpoint.view("A.log", "file.tar.gz", 1, response);
+
+        // then -> exception
     }
 
     private void createTarGzArchive(String archiveFileName, String contentFileName, String content) throws Exception {
@@ -310,7 +332,7 @@ public class LogViewEndpointTest {
         expectedException.expectMessage(containsString("this String argument must not contain the substring [..]"));
 
         // when
-        logViewEndpoint.view("../somefile", null, null);
+        logViewEndpoint.view("../somefile", null, null, null);
     }
 
     @Test
@@ -320,10 +342,24 @@ public class LogViewEndpointTest {
         ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
-        logViewEndpoint.view("file.log", null, response);
+        logViewEndpoint.view("file.log", null, null, response);
 
         // then
         assertThat(new String(outputStream.toByteArray()), is("abc"));
+    }
+
+    @Test
+    public void shouldTailViewOnlyLastLine() throws Exception {
+        // given
+        createFile("file.log", "line1" + System.lineSeparator() + "line2" + System.lineSeparator(), now);
+        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+
+        // when
+        logViewEndpoint.view("file.log", null, 1, response);
+
+        // then
+        assertThat(new String(outputStream.toByteArray()), not(containsString("line1")));
+        assertThat(new String(outputStream.toByteArray()), containsString("line2"));
     }
 
     @Test

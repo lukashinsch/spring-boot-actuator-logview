@@ -120,10 +120,19 @@ public class LogViewEndpoint implements MvcEndpoint{
     }
 
     @RequestMapping("/view")
-    public void view(@RequestParam String filename, @RequestParam(required = false) String base, HttpServletResponse response) throws IOException {
+    public void view(@RequestParam String filename,
+                     @RequestParam(required = false) String base,
+                     @RequestParam(required = false) Integer tailLines,
+                     HttpServletResponse response) throws IOException {
         securityCheck(filename);
         Path path = loggingPath(base);
-        getFileProvider(path).streamContent(path, filename, response.getOutputStream());
+        FileProvider fileProvider = getFileProvider(path);
+        if (tailLines != null) {
+            fileProvider.tailContent(path, filename, response.getOutputStream(), tailLines);
+        }
+        else {
+            fileProvider.streamContent(path, filename, response.getOutputStream());
+        }
     }
 
     @RequestMapping("/search")
