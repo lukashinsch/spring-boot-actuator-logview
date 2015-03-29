@@ -2,7 +2,7 @@ package eu.hinsch.spring.boot.actuator.logview;
 
 import com.codepoetics.protonpack.StreamUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.ReversedLinesFileReader;
+import org.apache.commons.io.input.UncheckedReversedLinesFileReader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -75,21 +75,13 @@ public class FileSystemFileProvider extends AbstractFileProvider {
 
     @Override
     public void tailContent(Path folder, String filename, OutputStream stream, int lines) throws IOException {
-        try (ReversedLinesFileReader reader = new ReversedLinesFileReader(getFile(folder, filename))) {
+        try (UncheckedReversedLinesFileReader reader = new UncheckedReversedLinesFileReader(getFile(folder, filename))) {
             List<String> content = StreamUtils.takeWhile(
-                        Stream.generate(() -> readLine(reader)),
+                        Stream.generate(() -> reader.readLine()),
                         line -> line != null)
                     .limit(lines)
                     .collect(LinkedList::new, LinkedList::addFirst, LinkedList::addAll);
             IOUtils.writeLines(content, System.lineSeparator(), stream);
-        }
-    }
-
-    private String readLine(ReversedLinesFileReader reader) {
-        try {
-            return reader.readLine();
-        } catch (IOException e) {
-            throw new RuntimeException("cannot read line", e);
         }
     }
 }
