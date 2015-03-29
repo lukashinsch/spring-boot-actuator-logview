@@ -1,5 +1,6 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
+import com.codepoetics.protonpack.StreamUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
@@ -11,9 +12,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
 * Created by lh on 28/02/15.
@@ -74,14 +76,20 @@ public class FileSystemFileProvider extends AbstractFileProvider {
     @Override
     public void tailContent(Path folder, String filename, OutputStream stream, int lines) throws IOException {
         try (ReversedLinesFileReader reader = new ReversedLinesFileReader(getFile(folder, filename))) {
-            int i = 0;
-            String line;
-            List<String> content = new ArrayList<>();
-            while ((line = reader.readLine()) != null && i++ < lines) {
-                content.add(line);
-            }
-            Collections.reverse(content);
+            List<String> content = StreamUtils.takeWhile(
+                        Stream.generate(() -> readLine(reader)),
+                        line -> line != null)
+                    .limit(lines)
+                    .collect(LinkedList::new, LinkedList::addFirst, LinkedList::addAll);
             IOUtils.writeLines(content, System.lineSeparator(), stream);
+        }
+    }
+
+    private String readLine(ReversedLinesFileReader reader) {
+        try {
+            return reader.readLine();
+        } catch (IOException e) {
+            throw new RuntimeException("cannot read line", e);
         }
     }
 }
