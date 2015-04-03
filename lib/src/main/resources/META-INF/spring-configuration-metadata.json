@@ -1,0 +1,8 @@
+{"properties": [
+  {
+    "name": "endpoints.logview.path",
+    "type": "java.lang.String",
+    "description": "Logfile root folder - if logging.path is not used",
+    "sourceType": "eu.hinsch.spring.boot.actuator.logview.LogViewEndpointAutoconfig"
+  }
+]}
