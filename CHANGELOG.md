@@ -1,5 +1,9 @@
 # spring-boot-actuator-logview changelog
 
+## 0.2.6
+- Fixed display issue with illegal whitespace
+- Fix cdn url
+
 ## 0.2.5
 - allow downloading only the last 50 lines of each file (closes [#13](https://github.com/lukashinsch/spring-boot-actuator-logview/pull/13))
 
