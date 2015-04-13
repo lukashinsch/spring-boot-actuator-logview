@@ -9,16 +9,11 @@ Features
 * allow quick access to spring-boot web application logfiles
 * uses actuator framework to provide management endpoint
 * list log folder content
-* view inidividual logfiles
+* view individual logfiles
 * view content of log archives (*.zip, *.tar.gz)
 * browse subdirectories
 * search in (non-compressed) files in logging root folder
-
-Dependencies
-* spring boot (web, actuator, freemarker) (tested with 1.2.1.RELEASE)
-* prettytime
-* commons-io
-* commons-compress
+* tail without reading entire file
 
 Howto use
 * include library on classpath of spring-boot app
@@ -40,4 +35,4 @@ Gradle
 compile 'eu.hinsch:spring-boot-actuator-logview:0.2.6'
 ```
 Note
-* lib depends on spring-boot-starter-freemarker, so it will currently not work with another templating engine for the main app
+* lib depends on spring-boot-starter-freemarker, so it may currently not work with another templating engine for the main app
