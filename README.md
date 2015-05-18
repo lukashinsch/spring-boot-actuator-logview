@@ -3,6 +3,8 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/eu.hinsch/spring-boot-actuator-logview/badge.svg)](https://maven-badges.herokuapp.com/maven-central/eu.hinsch/spring-boot-actuator-logview/)
 
 # spring-boot-actuator-logview
+
+[![Join the chat at https://gitter.im/lukashinsch/spring-boot-actuator-logview](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/lukashinsch/spring-boot-actuator-logview?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Simple logfile viewer as spring boot actuator endpoint
 
 Features
