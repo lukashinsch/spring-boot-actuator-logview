@@ -1,5 +1,8 @@
 # spring-boot-actuator-logview changelog
 
+## 0.2.7
+- Correctly encode file/dir names in urls (fixes - [#19](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/19))
+
 ## 0.2.6
 - Fixed display issue with illegal whitespace
 - Fix cdn url
