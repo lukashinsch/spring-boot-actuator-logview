@@ -7,6 +7,7 @@ import java.nio.file.attribute.FileTime;
 */
 public class FileEntry {
     private String filename;
+    private String displayFilename;
     private FileTime modified;
     private String modifiedPretty;
     private long size;
@@ -50,5 +51,13 @@ public class FileEntry {
 
     public void setFileType(FileType fileType) {
         this.fileType = fileType;
+    }
+
+    public void setDisplayFilename(String displayFilename) {
+        this.displayFilename = displayFilename;
+    }
+
+    public String getDisplayFilename() {
+        return displayFilename;
     }
 }

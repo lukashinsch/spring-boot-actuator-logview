@@ -4,10 +4,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
@@ -38,7 +36,12 @@ public class TarGzArchiveFileProvider extends AbstractFileProvider {
 
     private static FileEntry createFileEntry(TarArchiveEntry entry) {
         FileEntry fileEntry = new FileEntry();
-        fileEntry.setFilename(entry.getName());
+        try {
+            fileEntry.setFilename(URLEncoder.encode(entry.getName(), "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("encoding error", e);
+        }
+        fileEntry.setDisplayFilename(entry.getName());
         fileEntry.setSize(entry.getSize());
         fileEntry.setFileType(entry.isDirectory() ? FileType.DIRECTORY : FileType.FILE);
         fileEntry.setModified(FileTime.fromMillis(entry.getLastModifiedDate().getTime()));

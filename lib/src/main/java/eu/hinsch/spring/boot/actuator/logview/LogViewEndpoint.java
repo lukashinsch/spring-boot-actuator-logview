@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -69,7 +70,7 @@ public class LogViewEndpoint implements MvcEndpoint{
         model.addAttribute("desc", desc);
         model.addAttribute("files", sortedFiles);
         model.addAttribute("currentFolder", currentFolder.toAbsolutePath().toString());
-        model.addAttribute("base", base != null ? base : "");
+        model.addAttribute("base", base != null ? URLEncoder.encode(base, "UTF-8") : "");
         model.addAttribute("parent", getParent(currentFolder));
 
         return FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerConfig.getTemplate("logview.ftl"), model);

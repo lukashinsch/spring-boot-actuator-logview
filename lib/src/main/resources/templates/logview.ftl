@@ -62,14 +62,14 @@
                                 </#if>
                                 &nbsp;
                                 <#if file.fileType == 'FILE'>
-                                    <a href="view?filename=${file.filename}&base=${base}">${file.filename}</a>&nbsp;
+                                    <a href="view?filename=${file.filename}&base=${base}">${file.displayFilename}</a>&nbsp;
                                     <a href="view?filename=${file.filename}&base=${base}&tailLines=50" title="Download last 50 lines"><i class="fa fa-angle-double-down"></i></a>
                                 </#if>
                                 <#if file.fileType == 'ARCHIVE'>
-                                    <a href="?base=${base}/${file.filename}">${file.filename}</a>
+                                    <a href="?base=${base}/${file.filename}">${file.displayFilename}</a>
                                 </#if>
                                 <#if file.fileType == 'DIRECTORY'>
-                                    <a href="?base=${base}/${file.filename}">${file.filename}</a>
+                                    <a href="?base=${base}/${file.filename}">${file.displayFilename}</a>
                                 </#if>
                             </td>
                             <td>

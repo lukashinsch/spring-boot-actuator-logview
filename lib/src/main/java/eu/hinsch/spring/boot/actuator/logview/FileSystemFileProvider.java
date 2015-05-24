@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,8 +36,9 @@ public class FileSystemFileProvider extends AbstractFileProvider {
 
     private FileEntry createFileEntry(Path path)  {
         final FileEntry fileEntry = new FileEntry();
-        fileEntry.setFilename(path.getFileName().toString());
         try {
+            fileEntry.setFilename(URLEncoder.encode(path.getFileName().toString(), "UTF-8"));
+            fileEntry.setDisplayFilename(path.getFileName().toString());
             fileEntry.setModified(Files.getLastModifiedTime(path));
             fileEntry.setSize(Files.size(path));
         } catch (IOException e) {
