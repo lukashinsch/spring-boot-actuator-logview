@@ -1,5 +1,8 @@
 # spring-boot-actuator-logview changelog
 
+## 0.2.8
+- Remove tail option for files inside archives in UI (lead to 500 error before) (fixes [#17](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/17))
+
 ## 0.2.7
 - Correctly encode file/dir names in urls (fixes - [#19](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/19))
 
