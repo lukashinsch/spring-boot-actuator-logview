@@ -2,7 +2,7 @@ package eu.hinsch.spring.boot.actuator.logview;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.UncheckedIOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
@@ -152,7 +152,7 @@ public class LogViewEndpoint implements MvcEndpoint{
     private void searchAndStreamFile(FileEntry fileEntry, String term, OutputStream outputStream) {
         Path folder = loggingPath(null);
         try {
-            List<String> lines = IOUtils.readLines(new FileInputStream(new File(folder.toFile().toString(), fileEntry.getFilename())))
+            List<String> lines = UncheckedIOUtils.readLines(new FileInputStream(new File(folder.toFile().toString(), fileEntry.getFilename())))
                     .stream()
                     .filter(line -> line.contains(term))
                     .map(line -> "[" + fileEntry.getFilename() + "] " + line)

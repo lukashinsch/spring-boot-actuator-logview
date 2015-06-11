@@ -1,9 +1,11 @@
 buildscript {
     repositories {
+        mavenLocal()
         mavenCentral()
     }
     dependencies {
-        classpath("org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1")
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1'
+        classpath 'eu.hinsch:checked-exception-wrapper-gradle-plugin:0.1.1'
     }
 }
 
@@ -11,6 +13,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'jacoco'
 apply plugin: 'com.github.kt3k.coveralls'
+apply plugin: 'eu.hinsch.checked-exception-wrapper'
 
 ext {
     springBootVersion = '1.2.1.RELEASE'
@@ -36,10 +39,27 @@ dependencies {
     compile("org.ocpsoft.prettytime:prettytime:3.2.7.Final")
     compile("commons-io:commons-io:2.4")
     compile("org.apache.commons:commons-compress:1.9")
+    compile("com.codepoetics:protonpack:1.4")
 
     testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+
+    checkedExceptionWrapperGenerator("commons-io:commons-io:2.4:sources")
+    checkedExceptionWrapperGenerator("org.apache.commons:commons-compress:1.9:sources")
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir 'src/generated/java'
+        }
+    }
+}
+
+javadoc {
+    failOnError = false
+    // TODO not working
+    // exclude '**/generated/**'
+}
 
 idea {
     module {
@@ -56,10 +76,25 @@ jacocoTestReport {
 }
 
 test {
+    jacoco {
+        excludes = ['org.apache.*', '*Unchecked*']
+    }
     testLogging {
         events "failed"
         exceptionFormat "full" // show assertion errors in build
     }
+}
+
+checkedExceptionWrapperGenerator {
+    classes = ['org/apache/commons/io/IOUtils',
+//               'org/apache/commons/io/FileUtils',
+//               'org/apache/commons/compress/utils/IOUtils',
+               'org/apache/commons/io/input/ReversedLinesFileReader']
+    outputFolder = 'src/generated/java'
+    generatedClassNameSuffix = ''
+    generatedClassNamePrefix = 'Unchecked'
+    runtimeExceptionClass = 'java.lang.RuntimeException'
+    exceptionMessage = ''
 }
 
 // sign and publish to MC is done only locally so far
