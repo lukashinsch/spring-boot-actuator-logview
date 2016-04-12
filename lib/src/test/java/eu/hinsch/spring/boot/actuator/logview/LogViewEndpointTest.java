@@ -52,7 +52,8 @@ public class LogViewEndpointTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        logViewEndpoint = new LogViewEndpoint(temporaryFolder.getRoot().getAbsolutePath());
+        logViewEndpoint = new LogViewEndpoint(temporaryFolder.getRoot().getAbsolutePath(),
+                new LogViewEndpointAutoconfig.EndpointConfiguration().getStylesheets());
         model = new ExtendedModelMap();
         now = new Date().getTime();
     }

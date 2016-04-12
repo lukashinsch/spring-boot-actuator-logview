@@ -14,6 +14,9 @@ public class LogViewEndpointAutoconfigTest {
     @Mock
     private Environment environment;
 
+    @Mock
+    private LogViewEndpointAutoconfig.EndpointConfiguration configuration;
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
@@ -21,11 +24,11 @@ public class LogViewEndpointAutoconfigTest {
 
     @Test
     public void shouldCreateBeanForDefaultPath() {
-        assertThat(new LogViewEndpointAutoconfig().logViewEndpointWithDefaultPath(environment), notNullValue());
+        assertThat(new LogViewEndpointAutoconfig().logViewEndpointWithDefaultPath(environment, configuration), notNullValue());
     }
 
     @Test
     public void shouldCreateBeanForDeviatingPath() {
-        assertThat(new LogViewEndpointAutoconfig().logViewEndpointWithDeviatingPath(environment), notNullValue());
+        assertThat(new LogViewEndpointAutoconfig().logViewEndpointWithDeviatingPath(environment, configuration), notNullValue());
     }
 }
