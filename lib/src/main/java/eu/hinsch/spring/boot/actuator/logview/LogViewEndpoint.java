@@ -3,7 +3,6 @@ package eu.hinsch.spring.boot.actuator.logview;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.ui.Model;
@@ -34,13 +33,14 @@ import static java.util.stream.Collectors.toList;
  */
 public class LogViewEndpoint implements MvcEndpoint{
 
-    private static List<FileProvider> fileProviders;
+    private final List<FileProvider> fileProviders;
     private final Configuration freemarkerConfig;
-    private String loggingPath;
+    private final String loggingPath;
+    private final List<String> stylesheets;
 
-    @Autowired
-    public LogViewEndpoint(String loggingPath) {
+    public LogViewEndpoint(String loggingPath, List<String> stylesheets) {
         this.loggingPath = loggingPath;
+        this.stylesheets = stylesheets;
         fileProviders = asList(new FileSystemFileProvider(),
                 new ZipArchiveFileProvider(),
                 new TarGzArchiveFileProvider());
@@ -72,6 +72,7 @@ public class LogViewEndpoint implements MvcEndpoint{
         model.addAttribute("currentFolder", currentFolder.toAbsolutePath().toString());
         model.addAttribute("base", base != null ? URLEncoder.encode(base, "UTF-8") : "");
         model.addAttribute("parent", getParent(currentFolder));
+        model.addAttribute("stylesheets", stylesheets);
 
         return FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerConfig.getTemplate("logview.ftl"), model);
     }

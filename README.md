@@ -19,9 +19,10 @@ Simple logfile viewer as spring boot actuator endpoint
 
 ##Howto use
 * include library on classpath of spring-boot app
-* configure logging.path in spring environment 
-(alternatively - when using custom logging configuration or logging.file - use endpoints.logview.path)
+* configure `logging.path` in spring environment 
+(alternatively - when using custom logging configuration or `logging.file - use `endpoints.logview.path)
 * endpoint will be available under <management-base>/log
+* to replace default stylesheet links, set property `endpoints.logview.stylesheets` in yml to list of urls
 
 ###Gradle
 ```groovy

@@ -1,0 +1,11 @@
+management:
+  context-path: /manage
+logging:
+  path: /tmp/log
+
+#endpoints:
+#  logview:
+#    stylesheets:
+#      - http://foo.bar
+#      - http://bar.foo
+#    path: /tmp/log
