@@ -26,7 +26,7 @@ Simple logfile viewer as spring boot actuator endpoint
 
 ###Gradle
 ```groovy
-compile 'eu.hinsch:spring-boot-actuator-logview:0.2.9'
+compile 'eu.hinsch:spring-boot-actuator-logview:0.2.10'
 ```
 
 ###Maven
@@ -34,7 +34,7 @@ compile 'eu.hinsch:spring-boot-actuator-logview:0.2.9'
 <dependency>
     <groupId>eu.hinsch</groupId>
     <artifactId>spring-boot-actuator-logview</artifactId>
-    <version>0.2.9</version>
+    <version>0.2.10</version>
 </dependency>
 ```
 
