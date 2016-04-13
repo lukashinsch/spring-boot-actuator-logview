@@ -77,7 +77,7 @@
                             </td>
                             <td>
                                 <#if file.fileType != 'DIRECTORY'>
-                                    ${file.size}
+                                    ${file.sizePretty}
                                 </#if>
                             </td>
                             <td title="${file.modified}">${file.modifiedPretty}</td>

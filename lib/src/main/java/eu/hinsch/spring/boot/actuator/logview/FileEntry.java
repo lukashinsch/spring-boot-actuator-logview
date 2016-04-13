@@ -1,5 +1,7 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
+import org.apache.commons.io.FileUtils;
+
 import java.nio.file.attribute.FileTime;
 
 /**
@@ -60,4 +62,9 @@ public class FileEntry {
     public String getDisplayFilename() {
         return displayFilename;
     }
+
+    public String getSizePretty() {
+        return FileUtils.byteCountToDisplaySize(size);
+    }
+
 }
