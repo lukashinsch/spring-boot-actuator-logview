@@ -5,6 +5,7 @@ import freemarker.template.TemplateException;
 import org.apache.commons.io.IOUtils;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
+import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.util.Assert;
@@ -127,6 +128,8 @@ public class LogViewEndpoint implements MvcEndpoint{
                      @RequestParam(required = false) Integer tailLines,
                      HttpServletResponse response) throws IOException {
         securityCheck(filename);
+        response.setContentType(MediaType.TEXT_PLAIN_VALUE);
+
         Path path = loggingPath(base);
         FileProvider fileProvider = getFileProvider(path);
         if (tailLines != null) {
