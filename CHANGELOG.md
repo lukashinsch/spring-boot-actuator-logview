@@ -1,5 +1,8 @@
 # spring-boot-actuator-logview changelog
 
+## 0.2.10
+- Set content type in log response (fixes [#21](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/21))
+
 ## 0.2.9
 - Add configuration option to override stylesheet urls (fixes [#20](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/20))
 
