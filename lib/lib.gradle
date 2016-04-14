@@ -14,7 +14,7 @@ apply plugin: 'com.github.kt3k.coveralls'
 
 ext {
     springBootVersion = '1.2.1.RELEASE'
-    libVersion = '0.2.10'
+    libVersion = '0.2.11'
 }
 
 jar {
