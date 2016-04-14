@@ -146,6 +146,7 @@ public class LogViewEndpoint implements MvcEndpoint{
         List<FileEntry> files = getFileProvider(folder).getFileEntries(folder);
         List<FileEntry> sortedFiles = sortFiles(files, SortBy.MODIFIED, false);
 
+        response.setContentType(MediaType.TEXT_PLAIN_VALUE);
         ServletOutputStream outputStream = response.getOutputStream();
 
         sortedFiles.stream()

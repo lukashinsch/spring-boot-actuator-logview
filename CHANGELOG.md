@@ -1,5 +1,8 @@
 # spring-boot-actuator-logview changelog
 
+## 0.2.11
+- Set missing content type in search result
+
 ## 0.2.10
 - Set content type in log response (fixes [#21](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/21))
 - Prettify file size display (fixes [#23](https://github.com/lukashinsch/spring-boot-actuator-logview/issues/23))
