@@ -1,5 +1,6 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -7,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -14,16 +16,27 @@ import static java.util.Arrays.asList;
 @Configuration
 public class LogViewEndpointAutoconfig {
 
+    public static final String LOGGING_FILE = "logging.file";
     public static final String LOGGING_PATH = "logging.path";
     public static final String ENDPOINTS_LOGVIEW_PATH = "endpoints.logview.path";
 
+    @ConditionalOnProperty(LOGGING_FILE)
+    @ConditionalOnMissingBean(LogViewEndpoint.class)
+    @Bean
+    public LogViewEndpoint logViewEndpointWithDefaultFile(Environment environment, EndpointConfiguration configuration) {
+        String logDirectory = new File(environment.getRequiredProperty(LOGGING_FILE)).getParentFile().getAbsolutePath();
+        return new LogViewEndpoint(logDirectory, configuration.getStylesheets());
+    }
+
     @ConditionalOnProperty(LOGGING_PATH)
+    @ConditionalOnMissingBean(LogViewEndpoint.class)
     @Bean
     public LogViewEndpoint logViewEndpointWithDefaultPath(Environment environment, EndpointConfiguration configuration) {
         return new LogViewEndpoint(environment.getRequiredProperty(LOGGING_PATH), configuration.getStylesheets());
     }
 
     @ConditionalOnProperty(ENDPOINTS_LOGVIEW_PATH)
+    @ConditionalOnMissingBean(LogViewEndpoint.class)
     @Bean
     public LogViewEndpoint logViewEndpointWithDeviatingPath(Environment environment, EndpointConfiguration configuration) {
         return new LogViewEndpoint(configuration.getPath(), configuration.getStylesheets());
