@@ -6,8 +6,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.core.env.Environment;
 
+import static eu.hinsch.spring.boot.actuator.logview.LogViewEndpointAutoconfig.LOGGING_FILE;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
 
 public class LogViewEndpointAutoconfigTest {
 
@@ -20,6 +22,12 @@ public class LogViewEndpointAutoconfigTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void shouldCreateBeanForDefaultFile() {
+        when(environment.getRequiredProperty(LOGGING_FILE)).thenReturn("./custom.log");
+        assertThat(new LogViewEndpointAutoconfig().logViewEndpointWithDefaultFile(environment, configuration), notNullValue());
     }
 
     @Test
