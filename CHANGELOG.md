@@ -1,5 +1,8 @@
 # spring-boot-actuator-logview changelog
 
+## 0.2.12
+- support logfile configuration via logging.file property (thanks @oyvindhorneland)
+
 ## 0.2.11
 - Set missing content type in search result
 
