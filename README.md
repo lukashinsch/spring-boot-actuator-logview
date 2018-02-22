@@ -10,14 +10,14 @@ Simple logfile viewer as spring boot actuator endpoint
 * uses actuator framework to provide management endpoint
 * list log folder content
 * view individual logfiles
-* view content of log archives (*.zip, *.tar.gz)
+* view content of log archives (*.zip, *.tar.gz, *.gz)
 * browse subdirectories
 * search in (non-compressed) files in logging root folder
 * tail without reading entire file
 
 ![screenshot](img/screenshot.png)
 
-## Howto use
+## How to use
 * include library on classpath of spring-boot app
 * configure `logging.path`, `logging.file` or `endpoints.logview.path` in spring environment
     * `logging.file` specifies a custom log file. Logviewer will use it's parent directory.
@@ -41,5 +41,5 @@ compile 'eu.hinsch:spring-boot-actuator-logview:0.2.12'
 ```
 
 
-Note
+#### Note
 * lib depends on spring-boot-starter-freemarker, so it may currently not work with another templating engine for the main app
