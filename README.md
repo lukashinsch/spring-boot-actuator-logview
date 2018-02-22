@@ -5,7 +5,7 @@
 # spring-boot-actuator-logview
 Simple logfile viewer as spring boot actuator endpoint
 
-##Features
+## Features
 * allow quick access to spring-boot web application logfiles
 * uses actuator framework to provide management endpoint
 * list log folder content
@@ -17,7 +17,7 @@ Simple logfile viewer as spring boot actuator endpoint
 
 ![screenshot](img/screenshot.png)
 
-##Howto use
+## Howto use
 * include library on classpath of spring-boot app
 * configure `logging.path`, `logging.file` or `endpoints.logview.path` in spring environment
     * `logging.file` specifies a custom log file. Logviewer will use it's parent directory.
@@ -26,12 +26,12 @@ Simple logfile viewer as spring boot actuator endpoint
 * endpoint will be available under <management-base>/log
 * to replace default stylesheet links, set property `endpoints.logview.stylesheets` in yml to list of urls
 
-###Gradle
+### Gradle
 ```groovy
 compile 'eu.hinsch:spring-boot-actuator-logview:0.2.12'
 ```
 
-###Maven
+### Maven
 ```xml
 <dependency>
     <groupId>eu.hinsch</groupId>
