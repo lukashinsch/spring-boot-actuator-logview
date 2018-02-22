@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by lh on 28/02/15.
+ * Created by eputz on 2018-02-22
  */
 public class GzArchiveFileProvider extends AbstractFileProvider {
     @Override
@@ -45,20 +45,16 @@ public class GzArchiveFileProvider extends AbstractFileProvider {
     }
 
     private int getRealFileSize(final GzipCompressorInputStream stream) throws IOException {
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            final byte[] buffer = new byte[1024];
 
-        final byte[] buffer = new byte[1024];
+            int n;
+            while (-1 != (n = stream.read(buffer))) {
+                out.write(buffer, 0, n);
+            }
 
-        int n;
-        while (-1 != (n = stream.read(buffer))) {
-            out.write(buffer, 0, n);
+            return out.size();
         }
-
-        final int size = out.size();
-
-        out.close();
-
-        return size;
     }
 
     @Override
