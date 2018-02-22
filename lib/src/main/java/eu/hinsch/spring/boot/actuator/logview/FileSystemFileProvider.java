@@ -17,31 +17,30 @@ import java.util.Date;
 import java.util.List;
 
 /**
-* Created by lh on 28/02/15.
-*/
+ * Created by lh on 28/02/15.
+ */
 public class FileSystemFileProvider extends AbstractFileProvider {
-
     @Override
-    public boolean canHandle(Path folder) {
+    public boolean canHandle(final Path folder) {
         return folder.toFile().isDirectory();
     }
 
     @Override
-    public List<FileEntry> getFileEntries(Path loggingPath) throws IOException {
+    public List<FileEntry> getFileEntries(final Path loggingPath) throws IOException {
         final List<FileEntry> files = new ArrayList<>();
         Files.newDirectoryStream(loggingPath)
-                .forEach((path) -> files.add(createFileEntry(path)));
+            .forEach((path) -> files.add(createFileEntry(path)));
         return files;
     }
 
-    private FileEntry createFileEntry(Path path)  {
+    private FileEntry createFileEntry(final Path path) {
         final FileEntry fileEntry = new FileEntry();
         try {
             fileEntry.setFilename(URLEncoder.encode(path.getFileName().toString(), "UTF-8"));
             fileEntry.setDisplayFilename(path.getFileName().toString());
             fileEntry.setModified(Files.getLastModifiedTime(path));
             fileEntry.setSize(Files.size(path));
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException("unable to retrieve file attribute", e);
         }
         fileEntry.setModifiedPretty(prettyTime.format(new Date(fileEntry.getModified().toMillis())));
@@ -50,35 +49,33 @@ public class FileSystemFileProvider extends AbstractFileProvider {
         return fileEntry;
     }
 
-    private FileType getFileType(Path path) {
-        FileType fileType;
+    private FileType getFileType(final Path path) {
+        final FileType fileType;
         if (path.toFile().isDirectory()) {
             fileType = FileType.DIRECTORY;
-        }
-        else if (isArchive(path)) {
+        } else if (isArchive(path)) {
             fileType = FileType.ARCHIVE;
-        }
-        else {
+        } else {
             fileType = FileType.FILE;
         }
         return fileType;
     }
 
     @Override
-    public void streamContent(Path folder, String filename, OutputStream stream) throws IOException {
+    public void streamContent(final Path folder, final String filename, final OutputStream stream) throws IOException {
         IOUtils.copy(new FileInputStream(getFile(folder, filename)), stream);
     }
 
-    private File getFile(Path folder, String filename) {
+    private File getFile(final Path folder, final String filename) {
         return Paths.get(folder.toString(), filename).toFile();
     }
 
     @Override
-    public void tailContent(Path folder, String filename, OutputStream stream, int lines) throws IOException {
+    public void tailContent(final Path folder, final String filename, final OutputStream stream, final int lines) throws IOException {
         try (ReversedLinesFileReader reader = new ReversedLinesFileReader(getFile(folder, filename))) {
-            int i = 0;
-            String line;
-            List<String> content = new ArrayList<>();
+            int                i       = 0;
+            String             line;
+            final List<String> content = new ArrayList<>();
             while ((line = reader.readLine()) != null && i++ < lines) {
                 content.add(line);
             }

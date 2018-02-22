@@ -3,6 +3,8 @@ package eu.hinsch.spring.boot.actuator.logview;
 import org.apache.catalina.ssi.ByteArrayServletOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipParameters;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -16,10 +18,10 @@ import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -32,7 +34,7 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "SameParameterValue"})
 public class LogViewEndpointTest {
 
     @Rule
@@ -47,13 +49,13 @@ public class LogViewEndpointTest {
     private LogViewEndpoint logViewEndpoint;
 
     private Model model;
-    private long now;
+    private long  now;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         logViewEndpoint = new LogViewEndpoint(temporaryFolder.getRoot().getAbsolutePath(),
-                new LogViewEndpointAutoconfig.EndpointConfiguration().getStylesheets());
+            new LogViewEndpointAutoconfig.EndpointConfiguration().getStylesheets());
         model = new ExtendedModelMap();
         now = new Date().getTime();
     }
@@ -194,9 +196,9 @@ public class LogViewEndpointTest {
         logViewEndpoint.list(model, SortBy.FILENAME, false, null);
 
         // then
-        List<FileEntry> fileEntries = getFileEntries();
+        final List<FileEntry> fileEntries = getFileEntries();
         assertThat(fileEntries, hasSize(1));
-        FileEntry fileEntry = fileEntries.get(0);
+        final FileEntry fileEntry = fileEntries.get(0);
         assertThat(fileEntry.getFileType(), is(FileType.DIRECTORY));
         assertThat(fileEntry.getFilename(), is("subfolder"));
     }
@@ -210,9 +212,9 @@ public class LogViewEndpointTest {
         logViewEndpoint.list(model, SortBy.FILENAME, false, "file.zip");
 
         // then
-        List<FileEntry> fileEntries = getFileEntries();
+        final List<FileEntry> fileEntries = getFileEntries();
         assertThat(fileEntries, hasSize(1));
-        FileEntry fileEntry = fileEntries.get(0);
+        final FileEntry fileEntry = fileEntries.get(0);
         assertThat(fileEntry.getFilename(), is("A.log"));
     }
 
@@ -220,7 +222,7 @@ public class LogViewEndpointTest {
     public void shouldViewZipFileContent() throws Exception {
         // given
         createZipArchive("file.zip", "A.log", "content");
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        final ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("A.log", "file.zip", null, response);
@@ -229,9 +231,9 @@ public class LogViewEndpointTest {
         assertThat(new String(outputStream.toByteArray()), is("content"));
     }
 
-    private void createZipArchive(String archiveFileName, String contentFileName, String content) throws Exception {
-        try(ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(new File(temporaryFolder.getRoot(), archiveFileName)))) {
-            ZipEntry zipEntry = new ZipEntry(contentFileName);
+    private void createZipArchive(final String archiveFileName, final String contentFileName, final String content) throws Exception {
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(new File(temporaryFolder.getRoot(), archiveFileName)))) {
+            final ZipEntry zipEntry = new ZipEntry(contentFileName);
             zos.putNextEntry(zipEntry);
             IOUtils.write(content, zos);
         }
@@ -257,9 +259,24 @@ public class LogViewEndpointTest {
         logViewEndpoint.list(model, SortBy.FILENAME, false, "file.tar.gz");
 
         // then
-        List<FileEntry> fileEntries = getFileEntries();
+        final List<FileEntry> fileEntries = getFileEntries();
         assertThat(fileEntries, hasSize(1));
-        FileEntry fileEntry = fileEntries.get(0);
+        final FileEntry fileEntry = fileEntries.get(0);
+        assertThat(fileEntry.getFilename(), is("A.log"));
+    }
+
+    @Test
+    public void shouldListGzContent() throws Exception {
+        // given
+        createGzArchive("file.gz", "A.log", "content");
+
+        // when
+        logViewEndpoint.list(model, SortBy.FILENAME, false, "file.gz");
+
+        // then
+        final List<FileEntry> fileEntries = getFileEntries();
+        assertThat(fileEntries, hasSize(1));
+        final FileEntry fileEntry = fileEntries.get(0);
         assertThat(fileEntry.getFilename(), is("A.log"));
     }
 
@@ -267,10 +284,23 @@ public class LogViewEndpointTest {
     public void shouldViewTarGzFileContent() throws Exception {
         // given
         createTarGzArchive("file.tar.gz", "A.log", "content");
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        final ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("A.log", "file.tar.gz", null, response);
+
+        // then
+        assertThat(new String(outputStream.toByteArray()), is("content"));
+    }
+
+    @Test
+    public void shouldViewGzFileContent() throws Exception {
+        // given
+        createGzArchive("file.gz", "A.log", "content");
+        final ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+
+        // when
+        logViewEndpoint.view("A.log", "file.gz", null, response);
 
         // then
         assertThat(new String(outputStream.toByteArray()), is("content"));
@@ -287,19 +317,40 @@ public class LogViewEndpointTest {
         // then -> exception
     }
 
-    private void createTarGzArchive(String archiveFileName, String contentFileName, String content) throws Exception {
+    private void createTarGzArchive(final String archiveFileName, final String contentFileName, final String content) throws Exception {
 
-        try(TarArchiveOutputStream tos = new TarArchiveOutputStream(new GZIPOutputStream(
-                new BufferedOutputStream(new FileOutputStream(
-                        new File(temporaryFolder.getRoot(), archiveFileName)))))) {
+        try (TarArchiveOutputStream tos = new TarArchiveOutputStream(new GZIPOutputStream(
+            new BufferedOutputStream(new FileOutputStream(
+                new File(temporaryFolder.getRoot(), archiveFileName)))))) {
             tos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_STAR);
             tos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
-            TarArchiveEntry archiveEntry = new TarArchiveEntry(contentFileName);
+            final TarArchiveEntry archiveEntry = new TarArchiveEntry(contentFileName);
             archiveEntry.setSize(content.length());
             tos.putArchiveEntry(archiveEntry);
             IOUtils.write(content, tos);
             tos.closeArchiveEntry();
         }
+    }
+
+    private void createGzArchive(final String archiveFileName, final String contentFileName, final String content) throws Exception {
+        final GzipParameters gzip = new GzipParameters();
+
+        gzip.setFilename(contentFileName);
+
+        final InputStream                is        = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+        final OutputStream               out       = Files.newOutputStream(Paths.get(temporaryFolder.getRoot().getAbsolutePath(), archiveFileName));
+        final GzipCompressorOutputStream outStream = new GzipCompressorOutputStream(new BufferedOutputStream(out), gzip);
+
+        final byte[] buffer = new byte[1024];
+
+        int n;
+
+        while (-1 != (n = is.read(buffer))) {
+            outStream.write(buffer, 0, n);
+        }
+
+        outStream.close();
+        is.close();
     }
 
     @Test
@@ -340,7 +391,7 @@ public class LogViewEndpointTest {
     public void shouldViewFile() throws Exception {
         // given
         createFile("file.log", "abc", now);
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        final ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("file.log", null, null, response);
@@ -353,7 +404,7 @@ public class LogViewEndpointTest {
     public void shouldTailViewOnlyLastLine() throws Exception {
         // given
         createFile("file.log", "line1" + System.lineSeparator() + "line2" + System.lineSeparator(), now);
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        final ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("file.log", null, 1, response);
@@ -366,16 +417,16 @@ public class LogViewEndpointTest {
     @Test
     public void shouldSearchInFiles() throws Exception {
         // given
-        String sep = System.lineSeparator();
+        final String sep = System.lineSeparator();
         createFile("A.log", "A-line1" + sep + "A-line2" + sep + "A-line3", now - 1);
         createFile("B.log", "B-line1" + sep + "B-line2" + sep + "B-line3", now);
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        final ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.search("line2", response);
 
         // then
-        String output = new String(outputStream.toByteArray());
+        final String output = new String(outputStream.toByteArray());
         assertThat(output, containsString("[A.log] A-line2"));
         assertThat(output, containsString("[B.log] B-line2"));
         assertThat(output, not(containsString("line1")));
@@ -383,38 +434,38 @@ public class LogViewEndpointTest {
     }
 
     private ByteArrayServletOutputStream mockResponseOutputStream() throws Exception {
-        ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
+        final ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
         when(response.getOutputStream()).thenReturn(outputStream);
         return outputStream;
     }
 
     private List<String> getFileNames() {
         return getFileEntries()
-                .stream()
-                .map(FileEntry::getFilename)
-                .collect(toList());
+            .stream()
+            .map(FileEntry::getFilename)
+            .collect(toList());
     }
 
     private List<Long> getFileSizes() {
         return getFileEntries()
-                .stream()
-                .map(FileEntry::getSize)
-                .collect(toList());
+            .stream()
+            .map(FileEntry::getSize)
+            .collect(toList());
     }
 
     private List<String> getFilePrettyTimes() {
         return getFileEntries()
-                .stream()
-                .map(FileEntry::getModifiedPretty)
-                .collect(toList());
+            .stream()
+            .map(FileEntry::getModifiedPretty)
+            .collect(toList());
     }
 
     private List<FileEntry> getFileEntries() {
         return (List<FileEntry>) model.asMap().get("files");
     }
 
-    private void createFile(String filename, String content, long modified) throws Exception {
-        File file = new File(temporaryFolder.getRoot(), filename);
+    private void createFile(final String filename, final String content, final long modified) throws Exception {
+        final File file = new File(temporaryFolder.getRoot(), filename);
         FileUtils.write(file, content);
         assertThat(file.setLastModified(modified), is(true));
     }
