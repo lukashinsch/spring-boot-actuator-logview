@@ -16,28 +16,15 @@ import java.util.zip.ZipFile;
 import static java.util.stream.Collectors.toList;
 
 /**
-* Created by lh on 28/02/15.
-*/
+ * Created by lh on 28/02/15.
+ */
 public class ZipArchiveFileProvider extends AbstractFileProvider {
 
-    @Override
-    public boolean canHandle(Path folder) {
-        return isZip(folder);
-    }
-
-    @Override
-    public List<FileEntry> getFileEntries(Path folder) throws IOException {
-        ZipFile zipFile = new ZipFile(folder.toFile());
-        return zipFile.stream()
-                .map(ZipArchiveFileProvider::createFileEntry)
-                .collect(toList());
-    }
-
-    private static FileEntry createFileEntry(ZipEntry entry) {
-        FileEntry fileEntry = new FileEntry();
+    private static FileEntry createFileEntry(final ZipEntry entry) {
+        final FileEntry fileEntry = new FileEntry();
         try {
             fileEntry.setFilename(URLEncoder.encode(entry.getName(), "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
+        } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException("encoding error", e);
         }
         fileEntry.setDisplayFilename(entry.getName());
@@ -49,9 +36,22 @@ public class ZipArchiveFileProvider extends AbstractFileProvider {
     }
 
     @Override
-    public void streamContent(Path folder, String filename, OutputStream stream) throws IOException {
-        ZipFile zipFile = new ZipFile(folder.toFile());
-        ZipEntry entry = zipFile.getEntry(filename);
+    public boolean canHandle(final Path folder) {
+        return isZip(folder);
+    }
+
+    @Override
+    public List<FileEntry> getFileEntries(final Path folder) throws IOException {
+        final ZipFile zipFile = new ZipFile(folder.toFile());
+        return zipFile.stream()
+            .map(ZipArchiveFileProvider::createFileEntry)
+            .collect(toList());
+    }
+
+    @Override
+    public void streamContent(final Path folder, final String filename, final OutputStream stream) throws IOException {
+        final ZipFile  zipFile = new ZipFile(folder.toFile());
+        final ZipEntry entry   = zipFile.getEntry(filename);
         IOUtils.copy(zipFile.getInputStream(entry), stream);
     }
 }

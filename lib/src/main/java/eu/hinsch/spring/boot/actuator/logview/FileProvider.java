@@ -6,17 +6,16 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
-* Created by lh on 28/02/15.
-*/
+ * Created by lh on 28/02/15.
+ */
 public interface FileProvider {
-
     boolean canHandle(Path folder);
 
     List<FileEntry> getFileEntries(Path folder) throws IOException;
 
     void streamContent(Path folder, String filename, OutputStream stream) throws IOException;
 
-    default void tailContent(Path folder, String filename, OutputStream stream, int lines) throws IOException {
+    default void tailContent(final Path folder, final String filename, final OutputStream stream, final int lines) throws IOException {
         throw new UnsupportedOperationException("by default no tailing possible");
     }
 }

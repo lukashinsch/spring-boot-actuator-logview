@@ -14,31 +14,15 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 /**
-* Created by lh on 28/02/15.
-*/
+ * Created by lh on 28/02/15.
+ */
 public class TarGzArchiveFileProvider extends AbstractFileProvider {
 
-    @Override
-    public boolean canHandle(Path folder) {
-        return isTarGz(folder);
-    }
-
-    @Override
-    public List<FileEntry> getFileEntries(Path folder) throws IOException {
-        TarArchiveInputStream inputStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(folder.toFile())));
-        TarArchiveEntry entry;
-        List<FileEntry> files = new ArrayList<>();
-        while ((entry = inputStream.getNextTarEntry()) != null) {
-            files.add(createFileEntry(entry));
-        }
-        return files;
-    }
-
-    private static FileEntry createFileEntry(TarArchiveEntry entry) {
-        FileEntry fileEntry = new FileEntry();
+    private static FileEntry createFileEntry(final TarArchiveEntry entry) {
+        final FileEntry fileEntry = new FileEntry();
         try {
             fileEntry.setFilename(URLEncoder.encode(entry.getName(), "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
+        } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException("encoding error", e);
         }
         fileEntry.setDisplayFilename(entry.getName());
@@ -50,9 +34,25 @@ public class TarGzArchiveFileProvider extends AbstractFileProvider {
     }
 
     @Override
-    public void streamContent(Path folder, String filename, OutputStream stream) throws IOException {
-        TarArchiveInputStream tarStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(folder.toFile())));
-        TarArchiveEntry entry;
+    public boolean canHandle(final Path folder) {
+        return isTarGz(folder);
+    }
+
+    @Override
+    public List<FileEntry> getFileEntries(final Path folder) throws IOException {
+        final TarArchiveInputStream inputStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(folder.toFile())));
+        TarArchiveEntry             entry;
+        final List<FileEntry>       files       = new ArrayList<>();
+        while ((entry = inputStream.getNextTarEntry()) != null) {
+            files.add(createFileEntry(entry));
+        }
+        return files;
+    }
+
+    @Override
+    public void streamContent(final Path folder, final String filename, final OutputStream stream) throws IOException {
+        final TarArchiveInputStream tarStream = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(folder.toFile())));
+        TarArchiveEntry             entry;
         while ((entry = tarStream.getNextTarEntry()) != null) {
             if (entry.getName().equals(filename)) {
                 // TODO why do we need the byte array in between???

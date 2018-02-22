@@ -7,6 +7,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'net.ltgt.apt' version '0.10'
+}
+
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'jacoco'
@@ -14,7 +18,7 @@ apply plugin: 'com.github.kt3k.coveralls'
 
 ext {
     springBootVersion = '1.2.1.RELEASE'
-    libVersion = '0.2.12'
+    libVersion = '0.2.13'
 }
 
 jar {
@@ -38,6 +42,9 @@ dependencies {
     compile("org.apache.commons:commons-compress:1.9")
 
     testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+
+    compileOnly("org.projectlombok:lombok:1.16.20")
+    apt("org.projectlombok:lombok:1.16.20")
 }
 
 

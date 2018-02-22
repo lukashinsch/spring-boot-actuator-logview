@@ -24,48 +24,55 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 /**
  * Created by lh on 23/02/15.
  */
-public class LogViewEndpoint implements MvcEndpoint{
+public class LogViewEndpoint implements MvcEndpoint {
 
     private final List<FileProvider> fileProviders;
-    private final Configuration freemarkerConfig;
-    private final String loggingPath;
-    private final List<String> stylesheets;
+    private final Configuration      freemarkerConfig;
+    private final String             loggingPath;
+    private final List<String>       stylesheets;
 
-    public LogViewEndpoint(String loggingPath, List<String> stylesheets) {
+    public LogViewEndpoint(final String loggingPath, final List<String> stylesheets) {
         this.loggingPath = loggingPath;
         this.stylesheets = stylesheets;
-        fileProviders = asList(new FileSystemFileProvider(),
-                new ZipArchiveFileProvider(),
-                new TarGzArchiveFileProvider());
+
+        // order is important!
+        fileProviders = new LinkedList<>();
+        fileProviders.add(new FileSystemFileProvider());
+        fileProviders.add(new ZipArchiveFileProvider());
+        fileProviders.add(new TarGzArchiveFileProvider());
+        fileProviders.add(new GzArchiveFileProvider());
+
         freemarkerConfig = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
         freemarkerConfig.setClassForTemplateLoading(this.getClass(), "/templates");
     }
 
     @RequestMapping
-    public void redirect(HttpServletResponse response) throws IOException {
+    public void redirect(final HttpServletResponse response) throws IOException {
         response.sendRedirect("log/");
     }
 
     @RequestMapping("/")
     @ResponseBody
-    public String list(Model model, // TODO model should no longer be injected
-                       @RequestParam(required = false, defaultValue = "FILENAME") SortBy sortBy,
-                       @RequestParam(required = false, defaultValue = "false") boolean desc,
-                       @RequestParam(required = false) String base) throws IOException, TemplateException {
+    public String list(
+        final Model model, // TODO model should no longer be injected
+        @RequestParam(required = false, defaultValue = "FILENAME") final SortBy sortBy,
+        @RequestParam(required = false, defaultValue = "false")    final boolean desc,
+        @RequestParam(required = false)                            final String base
+    ) throws IOException, TemplateException {
         securityCheck(base);
 
-        Path currentFolder = loggingPath(base);
+        final Path currentFolder = loggingPath(base);
 
-        List<FileEntry> files = getFileProvider(currentFolder).getFileEntries(currentFolder);
-        List<FileEntry> sortedFiles = sortFiles(files, sortBy, desc);
+        final List<FileEntry> files       = getFileProvider(currentFolder).getFileEntries(currentFolder);
+        final List<FileEntry> sortedFiles = sortFiles(files, sortBy, desc);
 
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("desc", desc);
@@ -78,16 +85,16 @@ public class LogViewEndpoint implements MvcEndpoint{
         return FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerConfig.getTemplate("logview.ftl"), model);
     }
 
-    private FileProvider getFileProvider(Path folder) {
+    private FileProvider getFileProvider(final Path folder) {
         return fileProviders.stream()
-                .filter(provider -> provider.canHandle(folder))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("no file provider found for " + folder.toString()));
+            .filter(provider -> provider.canHandle(folder))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("no file provider found for " + folder.toString()));
     }
 
-    private String getParent(Path loggingPath) {
-        Path basePath = loggingPath(null);
-        String parent = "";
+    private String getParent(final Path loggingPath) {
+        final Path basePath = loggingPath(null);
+        String     parent   = "";
         if (!basePath.toString().equals(loggingPath.toString())) {
             parent = loggingPath.getParent().toString();
             if (parent.startsWith(basePath.toString())) {
@@ -97,81 +104,83 @@ public class LogViewEndpoint implements MvcEndpoint{
         return parent;
     }
 
-    private Path loggingPath(String base) {
+    private Path loggingPath(final String base) {
         return base != null ? Paths.get(loggingPath, base) : Paths.get(loggingPath);
     }
 
-    private List<FileEntry> sortFiles(List<FileEntry> files, SortBy sortBy, boolean desc) {
+    private List<FileEntry> sortFiles(final List<FileEntry> files, final SortBy sortBy, final boolean desc) {
         Comparator<FileEntry> comparator = null;
         switch (sortBy) {
             case FILENAME:
-                comparator = (a, b) -> a.getFilename().compareTo(b.getFilename());
+                comparator = Comparator.comparing(FileEntry::getFilename);
                 break;
             case SIZE:
-                comparator = (a, b) -> Long.compare(a.getSize(), b.getSize());
+                comparator = Comparator.comparingLong(FileEntry::getSize);
                 break;
             case MODIFIED:
-                comparator = (a, b) -> Long.compare(a.getModified().toMillis(), b.getModified().toMillis());
+                comparator = Comparator.comparingLong(a -> a.getModified().toMillis());
                 break;
         }
-        List<FileEntry> sortedFiles = files.stream().sorted(comparator).collect(toList());
+        final List<FileEntry> sortedFiles = files.stream().sorted(comparator).collect(toList());
 
         if (desc) {
             Collections.reverse(sortedFiles);
         }
+
         return sortedFiles;
     }
 
     @RequestMapping("/view")
-    public void view(@RequestParam String filename,
-                     @RequestParam(required = false) String base,
-                     @RequestParam(required = false) Integer tailLines,
-                     HttpServletResponse response) throws IOException {
+    public void view(
+        @RequestParam                   final String filename,
+        @RequestParam(required = false) final String base,
+        @RequestParam(required = false) final Integer tailLines,
+        final HttpServletResponse response
+    ) throws IOException {
         securityCheck(filename);
         response.setContentType(MediaType.TEXT_PLAIN_VALUE);
 
-        Path path = loggingPath(base);
-        FileProvider fileProvider = getFileProvider(path);
+        final Path         path         = loggingPath(base);
+        final FileProvider fileProvider = getFileProvider(path);
         if (tailLines != null) {
             fileProvider.tailContent(path, filename, response.getOutputStream(), tailLines);
-        }
-        else {
+        } else {
             fileProvider.streamContent(path, filename, response.getOutputStream());
         }
     }
 
     @RequestMapping("/search")
-    public void search(@RequestParam String term, HttpServletResponse response) throws IOException {
-        Path folder = loggingPath(null);
-        List<FileEntry> files = getFileProvider(folder).getFileEntries(folder);
-        List<FileEntry> sortedFiles = sortFiles(files, SortBy.MODIFIED, false);
+    public void search(@RequestParam final String term, final HttpServletResponse response) throws IOException {
+        final Path            folder      = loggingPath(null);
+        final List<FileEntry> files       = getFileProvider(folder).getFileEntries(folder);
+        final List<FileEntry> sortedFiles = sortFiles(files, SortBy.MODIFIED, false);
 
         response.setContentType(MediaType.TEXT_PLAIN_VALUE);
-        ServletOutputStream outputStream = response.getOutputStream();
+        final ServletOutputStream outputStream = response.getOutputStream();
 
         sortedFiles.stream()
-                .filter(file -> file.getFileType().equals(FileType.FILE))
-                .forEach(file -> searchAndStreamFile(file, term, outputStream));
+            .filter(file -> file.getFileType().equals(FileType.FILE))
+            .forEach(file -> searchAndStreamFile(file, term, outputStream));
     }
 
-    private void searchAndStreamFile(FileEntry fileEntry, String term, OutputStream outputStream) {
-        Path folder = loggingPath(null);
+    private void searchAndStreamFile(final FileEntry fileEntry, final String term, final OutputStream outputStream) {
+        final Path folder = loggingPath(null);
         try {
-            List<String> lines = IOUtils.readLines(new FileInputStream(new File(folder.toFile().toString(), fileEntry.getFilename())))
-                    .stream()
-                    .filter(line -> line.contains(term))
-                    .map(line -> "[" + fileEntry.getFilename() + "] " + line)
-                    .collect(toList());
-            for (String line : lines) {
+            final List<String> lines = IOUtils.readLines(new FileInputStream(new File(folder.toFile().toString(), fileEntry.getFilename())))
+                .stream()
+                .filter(line -> line.contains(term))
+                .map(line -> "[" + fileEntry.getFilename() + "] " + line)
+                .collect(toList());
+            for (final String line : lines) {
                 outputStream.write(line.getBytes());
                 outputStream.write(System.lineSeparator().getBytes());
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException("error reading file", e);
         }
     }
 
-    private void securityCheck(String filename) {
+    private void securityCheck(final String filename) {
         Assert.doesNotContain(filename, "..");
     }
 
@@ -185,10 +194,8 @@ public class LogViewEndpoint implements MvcEndpoint{
         return true;
     }
 
-
     @Override
     public Class<? extends Endpoint> getEndpointType() {
         return null;
     }
-
 }
