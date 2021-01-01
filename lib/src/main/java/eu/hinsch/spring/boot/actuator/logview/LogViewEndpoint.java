@@ -3,13 +3,12 @@ package eu.hinsch.spring.boot.actuator.logview;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import org.apache.commons.io.IOUtils;
-import org.springframework.boot.actuate.endpoint.Endpoint;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
+import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
 import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -32,7 +31,8 @@ import static java.util.stream.Collectors.toList;
 /**
  * Created by lh on 23/02/15.
  */
-public class LogViewEndpoint implements MvcEndpoint{
+@RestControllerEndpoint(id = "log")
+public class LogViewEndpoint {
 
     private final List<FileProvider> fileProviders;
     private final Configuration freemarkerConfig;
@@ -49,20 +49,20 @@ public class LogViewEndpoint implements MvcEndpoint{
         freemarkerConfig.setClassForTemplateLoading(this.getClass(), "/templates");
     }
 
-    @RequestMapping
+    @GetMapping
     public void redirect(HttpServletResponse response) throws IOException {
         response.sendRedirect("log/");
     }
 
-    @RequestMapping("/")
+    @GetMapping("/")
     @ResponseBody
     public String list(Model model, // TODO model should no longer be injected
                        @RequestParam(required = false, defaultValue = "FILENAME") SortBy sortBy,
                        @RequestParam(required = false, defaultValue = "false") boolean desc,
                        @RequestParam(required = false) String base) throws IOException, TemplateException {
-        securityCheck(base);
-
         Path currentFolder = loggingPath(base);
+        securityCheck(currentFolder, null);
+
 
         List<FileEntry> files = getFileProvider(currentFolder).getFileEntries(currentFolder);
         List<FileEntry> sortedFiles = sortFiles(files, sortBy, desc);
@@ -122,15 +122,15 @@ public class LogViewEndpoint implements MvcEndpoint{
         return sortedFiles;
     }
 
-    @RequestMapping("/view")
+    @GetMapping("/view")
     public void view(@RequestParam String filename,
                      @RequestParam(required = false) String base,
                      @RequestParam(required = false) Integer tailLines,
                      HttpServletResponse response) throws IOException {
-        securityCheck(filename);
-        response.setContentType(MediaType.TEXT_PLAIN_VALUE);
 
         Path path = loggingPath(base);
+        securityCheck(path, filename);
+        response.setContentType(MediaType.TEXT_PLAIN_VALUE);
         FileProvider fileProvider = getFileProvider(path);
         if (tailLines != null) {
             fileProvider.tailContent(path, filename, response.getOutputStream(), tailLines);
@@ -140,7 +140,7 @@ public class LogViewEndpoint implements MvcEndpoint{
         }
     }
 
-    @RequestMapping("/search")
+    @GetMapping("/search")
     public void search(@RequestParam String term, HttpServletResponse response) throws IOException {
         Path folder = loggingPath(null);
         List<FileEntry> files = getFileProvider(folder).getFileEntries(folder);
@@ -171,24 +171,15 @@ public class LogViewEndpoint implements MvcEndpoint{
         }
     }
 
-    private void securityCheck(String filename) {
-        Assert.doesNotContain(filename, "..");
-    }
-
-    @Override
-    public String getPath() {
-        return "/log";
-    }
-
-    @Override
-    public boolean isSensitive() {
-        return true;
-    }
-
-
-    @Override
-    public Class<? extends Endpoint> getEndpointType() {
-        return null;
+    private void securityCheck(Path base, String filename) {
+        try {
+            String canonicalLoggingPath = (filename != null ? new File(base.toFile().toString(), filename) : new File(base.toFile().toString())).getCanonicalPath();
+            String baseCanonicalPath = new File(loggingPath).getCanonicalPath();
+            String errorMessage = "File " + base.toString() + "/" + filename + " may not be located outside base path " + loggingPath;
+            Assert.isTrue(canonicalLoggingPath.startsWith(baseCanonicalPath), errorMessage);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }

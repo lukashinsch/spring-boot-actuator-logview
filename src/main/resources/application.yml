@@ -1,5 +1,3 @@
-management:
-  context-path: /manage
 logging:
   path: /tmp/log
 #  file: /tmp/log/custom.log

@@ -1,30 +1,56 @@
-buildscript {
-    ext {
-        springBootVersion = '1.2.1.RELEASE'
-        springLoadedVersion = '1.2.1.RELEASE'
+
+plugins {
+    id 'org.springframework.boot' version '2.2.11.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'java'
+}
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+repositories {
+    mavenCentral()
+}
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+//        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-        classpath("org.springframework:springloaded:${springLoadedVersion}")
-        classpath("org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1")
-    }
+    runtime project('lib')
+}
+test {
+    useJUnitPlatform()
 }
 
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'spring-boot'
 
 
-jar {
-    baseName = 'spring-boot-actuator-logview-sample'
-    version = '0.0.1-SNAPSHOT'
-}
+//buildscript {
+//    ext {
+//        springBootVersion = '1.2.1.RELEASE'
+//        springLoadedVersion = '1.2.1.RELEASE'
+//    }
+//    repositories {
+//        mavenCentral()
+//    }
+//    dependencies {
+//        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+////        classpath("org.springframework:springloaded:${springLoadedVersion}")
+//        classpath("org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1")
+//    }
+//}
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+//apply plugin: 'java'
+//apply plugin: 'spring-boot'
+
+
+//jar {
+//    baseName = 'spring-boot-actuator-logview-sample'
+//    version = '0.0.1-SNAPSHOT'
+//}
+//
+//sourceCompatibility = 1.8
+//targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
@@ -32,19 +58,12 @@ repositories {
 
 
 dependencies {
-    compile project("lib")
+//    compile project("lib")
 
-    testCompile("org.springframework.boot:spring-boot-starter-test")
+//    testCompile("org.springframework.boot:spring-boot-starter-test")
 }
 
 
-idea {
-    module {
-        inheritOutputDirs = false
-        outputDir = file("$buildDir/classes/main/")
-    }
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
+wrapper {
+    gradleVersion = '6.1.1'
 }
