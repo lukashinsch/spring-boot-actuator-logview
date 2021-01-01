@@ -330,10 +330,20 @@ public class LogViewEndpointTest {
     public void shouldNotAllowToListFileOutsideRoot() throws Exception {
         // given
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(containsString("this String argument must not contain the substring [..]"));
+        expectedException.expectMessage(containsString("may not be located outside base path"));
 
         // when
         logViewEndpoint.view("../somefile", null, null, null);
+    }
+
+    @Test
+    public void shouldNotAllowToListWithBaseOutsideRoot() throws Exception {
+        // given
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(containsString("may not be located outside base path"));
+
+        // when
+        logViewEndpoint.view("somefile", "../otherdir", null, null);
     }
 
     @Test
