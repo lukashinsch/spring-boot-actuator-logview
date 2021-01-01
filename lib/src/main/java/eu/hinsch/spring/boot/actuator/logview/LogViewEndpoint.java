@@ -60,9 +60,9 @@ public class LogViewEndpoint implements MvcEndpoint{
                        @RequestParam(required = false, defaultValue = "FILENAME") SortBy sortBy,
                        @RequestParam(required = false, defaultValue = "false") boolean desc,
                        @RequestParam(required = false) String base) throws IOException, TemplateException {
-        securityCheck(base);
-
         Path currentFolder = loggingPath(base);
+        securityCheck(currentFolder, null);
+
 
         List<FileEntry> files = getFileProvider(currentFolder).getFileEntries(currentFolder);
         List<FileEntry> sortedFiles = sortFiles(files, sortBy, desc);
@@ -127,10 +127,10 @@ public class LogViewEndpoint implements MvcEndpoint{
                      @RequestParam(required = false) String base,
                      @RequestParam(required = false) Integer tailLines,
                      HttpServletResponse response) throws IOException {
-        securityCheck(filename);
-        response.setContentType(MediaType.TEXT_PLAIN_VALUE);
 
         Path path = loggingPath(base);
+        securityCheck(path, filename);
+        response.setContentType(MediaType.TEXT_PLAIN_VALUE);
         FileProvider fileProvider = getFileProvider(path);
         if (tailLines != null) {
             fileProvider.tailContent(path, filename, response.getOutputStream(), tailLines);
@@ -171,8 +171,15 @@ public class LogViewEndpoint implements MvcEndpoint{
         }
     }
 
-    private void securityCheck(String filename) {
-        Assert.doesNotContain(filename, "..");
+    private void securityCheck(Path base, String filename) {
+        try {
+            String canonicalLoggingPath = (filename != null ? new File(base.toFile().toString(), filename) : new File(base.toFile().toString())).getCanonicalPath();
+            String baseCanonicalPath = new File(loggingPath).getCanonicalPath();
+            String errorMessage = "File " + base.toString() + "/" + filename + " may not be located outside base path " + loggingPath;
+            Assert.isTrue(canonicalLoggingPath.startsWith(baseCanonicalPath), errorMessage);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
