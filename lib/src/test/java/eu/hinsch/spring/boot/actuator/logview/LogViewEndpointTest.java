@@ -1,6 +1,5 @@
 package eu.hinsch.spring.boot.actuator.logview;
 
-import org.apache.catalina.ssi.ByteArrayServletOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.FileUtils;
@@ -12,11 +11,13 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.mock.web.DelegatingServletOutputStream;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -220,13 +221,13 @@ public class LogViewEndpointTest {
     public void shouldViewZipFileContent() throws Exception {
         // given
         createZipArchive("file.zip", "A.log", "content");
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        ByteArrayOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("A.log", "file.zip", null, response);
 
         // then
-        assertThat(new String(outputStream.toByteArray()), is("content"));
+        assertThat(outputStream.toString(), is("content"));
     }
 
     private void createZipArchive(String archiveFileName, String contentFileName, String content) throws Exception {
@@ -267,13 +268,13 @@ public class LogViewEndpointTest {
     public void shouldViewTarGzFileContent() throws Exception {
         // given
         createTarGzArchive("file.tar.gz", "A.log", "content");
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        ByteArrayOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("A.log", "file.tar.gz", null, response);
 
         // then
-        assertThat(new String(outputStream.toByteArray()), is("content"));
+        assertThat(outputStream.toString(), is("content"));
     }
 
     @Test(expected = UnsupportedOperationException.class)
@@ -312,55 +313,50 @@ public class LogViewEndpointTest {
     }
 
     @Test
-    public void shouldEndpointBeSensitive() {
-        assertThat(logViewEndpoint.isSensitive(), is(true));
-    }
-
-    @Test
-    public void shouldReturnContextPath() {
-        assertThat(logViewEndpoint.getPath(), is("/log"));
-    }
-
-    @Test
-    public void shouldReturnNullEndpointType() {
-        assertThat(logViewEndpoint.getEndpointType(), is(nullValue()));
-    }
-
-    @Test
     public void shouldNotAllowToListFileOutsideRoot() throws Exception {
         // given
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(containsString("this String argument must not contain the substring [..]"));
+        expectedException.expectMessage(containsString("may not be located outside base path"));
 
         // when
         logViewEndpoint.view("../somefile", null, null, null);
     }
 
     @Test
+    public void shouldNotAllowToListWithBaseOutsideRoot() throws Exception {
+        // given
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage(containsString("may not be located outside base path"));
+
+        // when
+        logViewEndpoint.view("somefile", "../otherdir", null, null);
+    }
+
+    @Test
     public void shouldViewFile() throws Exception {
         // given
         createFile("file.log", "abc", now);
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        ByteArrayOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("file.log", null, null, response);
 
         // then
-        assertThat(new String(outputStream.toByteArray()), is("abc"));
+        assertThat(outputStream.toString(), is("abc"));
     }
 
     @Test
     public void shouldTailViewOnlyLastLine() throws Exception {
         // given
         createFile("file.log", "line1" + System.lineSeparator() + "line2" + System.lineSeparator(), now);
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        ByteArrayOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.view("file.log", null, 1, response);
 
         // then
-        assertThat(new String(outputStream.toByteArray()), not(containsString("line1")));
-        assertThat(new String(outputStream.toByteArray()), containsString("line2"));
+        assertThat(outputStream.toString(), not(containsString("line1")));
+        assertThat(outputStream.toString(), containsString("line2"));
     }
 
     @Test
@@ -369,22 +365,22 @@ public class LogViewEndpointTest {
         String sep = System.lineSeparator();
         createFile("A.log", "A-line1" + sep + "A-line2" + sep + "A-line3", now - 1);
         createFile("B.log", "B-line1" + sep + "B-line2" + sep + "B-line3", now);
-        ByteArrayServletOutputStream outputStream = mockResponseOutputStream();
+        ByteArrayOutputStream outputStream = mockResponseOutputStream();
 
         // when
         logViewEndpoint.search("line2", response);
 
         // then
-        String output = new String(outputStream.toByteArray());
+        String output = outputStream.toString();
         assertThat(output, containsString("[A.log] A-line2"));
         assertThat(output, containsString("[B.log] B-line2"));
         assertThat(output, not(containsString("line1")));
         assertThat(output, not(containsString("line3")));
     }
 
-    private ByteArrayServletOutputStream mockResponseOutputStream() throws Exception {
-        ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
-        when(response.getOutputStream()).thenReturn(outputStream);
+    private ByteArrayOutputStream mockResponseOutputStream() throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        when(response.getOutputStream()).thenReturn(new DelegatingServletOutputStream(outputStream));
         return outputStream;
     }
 

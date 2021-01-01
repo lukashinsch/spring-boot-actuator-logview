@@ -13,8 +13,8 @@ apply plugin: 'jacoco'
 apply plugin: 'com.github.kt3k.coveralls'
 
 ext {
-    springBootVersion = '1.2.1.RELEASE'
-    libVersion = '0.2.12'
+    springBootVersion = '2.2.11.RELEASE'
+    libVersion = '0.3.0'
 }
 
 jar {
@@ -64,71 +64,71 @@ test {
 
 // sign and publish to MC is done only locally so far
 
-if (System.getenv('CI') != 'true') {
-
-    apply plugin: 'signing'
-    apply plugin: 'maven'
-
-    group = 'eu.hinsch'
-    version = libVersion
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from tasks.javadoc.destinationDir
-    }
-
-    task sourcesJar(type: Jar) {
-        from sourceSets.main.allSource
-        classifier = 'sources'
-    }
-
-    artifacts {
-        archives jar
-        archives javadocJar
-        archives sourcesJar
-    }
-
-    signing {
-        sign configurations.archives
-    }
-
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
-                }
-
-                pom.project {
-                    name 'spring-boot-actuator-logview'
-                    packaging 'jar'
-                    description 'simple logfile viewer as spring boot actuator endpoint'
-                    url 'https://github.com/lukashinsch/spring-boot-actuator-logview/'
-
-                    scm {
-                        url 'scm:git@github.com:lukashinsch/spring-boot-actuator-logview.git'
-                        connection 'scm:git@github.com:lukashinsch/spring-boot-actuator-logview.git'
-                        developerConnection 'scm:git@github.com:lukashinsch/spring-boot-actuator-logview.git'
-                    }
-
-                    licenses {
-                        license {
-                            name 'MIT License'
-                            url 'http://www.opensource.org/licenses/mit-license.php'
-                            distribution 'repo'
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id 'lukashinsch'
-                            name 'Lukas Hinsch'
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+//if (System.getenv('CI') != 'true') {
+//
+//    apply plugin: 'signing'
+//    apply plugin: 'maven'
+//
+//    group = 'eu.hinsch'
+//    version = libVersion
+//
+//    task javadocJar(type: Jar, dependsOn: javadoc) {
+//        classifier = 'javadoc'
+//        from tasks.javadoc.destinationDir
+//    }
+//
+//    task sourcesJar(type: Jar) {
+//        from sourceSets.main.allSource
+//        classifier = 'sources'
+//    }
+//
+//    artifacts {
+//        archives jar
+//        archives javadocJar
+//        archives sourcesJar
+//    }
+//
+//    signing {
+//        sign configurations.archives
+//    }
+//
+//    uploadArchives {
+//        repositories {
+//            mavenDeployer {
+//                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+//
+//                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+//                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+//                }
+//
+//                pom.project {
+//                    name 'spring-boot-actuator-logview'
+//                    packaging 'jar'
+//                    description 'simple logfile viewer as spring boot actuator endpoint'
+//                    url 'https://github.com/lukashinsch/spring-boot-actuator-logview/'
+//
+//                    scm {
+//                        url 'scm:git@github.com:lukashinsch/spring-boot-actuator-logview.git'
+//                        connection 'scm:git@github.com:lukashinsch/spring-boot-actuator-logview.git'
+//                        developerConnection 'scm:git@github.com:lukashinsch/spring-boot-actuator-logview.git'
+//                    }
+//
+//                    licenses {
+//                        license {
+//                            name 'MIT License'
+//                            url 'http://www.opensource.org/licenses/mit-license.php'
+//                            distribution 'repo'
+//                        }
+//                    }
+//
+//                    developers {
+//                        developer {
+//                            id 'lukashinsch'
+//                            name 'Lukas Hinsch'
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
