@@ -48,3 +48,10 @@ idea {
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
 }
+
+allprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.incremental = true
+    }
+
+}
